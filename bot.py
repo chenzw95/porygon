@@ -69,7 +69,7 @@ async def shutdown(ctx):
 @bot.event
 async def on_command_error(ctx, error):
     error = getattr(error, 'original', error)
-    if hasattr(bot.get_cog(ctx.command.cog_name), '_' + ctx.command.cog_name + '__error'):
+    if hasattr(ctx.command, 'on_error') or hasattr(ctx.cog, '_{0.__class__.__name__}__error'.format(ctx.cog)):
         return
     if isinstance(error, discord.ext.commands.CommandNotFound):
         return
