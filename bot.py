@@ -1,0 +1,101 @@
+import os
+import sys
+import json
+import signal
+import logging
+
+import asyncio
+import discord
+from discord.ext import commands
+
+
+def initLogging():
+    logformat = "%(asctime)s %(name)s:%(levelname)s:%(message)s"
+    logging.basicConfig(level=logging.INFO, format=logformat,
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    logging.getLogger("discord").setLevel(logging.WARNING)
+    return logging.getLogger("porygon")
+
+
+def sig_handler(signum, frame):
+    logger.info("Exiting...")
+    # logger.shutdown()
+    sys.exit()
+
+
+def check_permissions_or_owner(**perms):
+    def predicate(ctx):
+        msg = ctx.message
+        if str(msg.author.id) == config['owner']:
+            return True
+        ch = msg.channel
+        permissions = ch.permissions_for(msg.author)
+        return all(getattr(permissions, perm, None) == value for perm, value in perms.items())
+
+    return commands.check(predicate)
+
+
+logger = initLogging()
+logger.info("Initializing...")
+signal.signal(signal.SIGTERM, sig_handler)
+signal.signal(signal.SIGINT, sig_handler)
+try:
+    with open("config.json") as c:
+        config = json.load(c)
+except FileNotFoundError:
+    logger.error("Config file not found, quitting!")
+    sys.exit(-1)
+bot = commands.Bot(command_prefix=config['prefix'],
+                   description='Porygon',
+                   max_messages=100)
+bot.config = config
+
+@check_permissions_or_owner(administrator=True)
+@bot.command(hidden=True)
+async def restart(ctx):
+    await ctx.send("Restarting...")
+    await bot.logout()
+    os._exit(1)
+
+
+@check_permissions_or_owner(administrator=True)
+@bot.command(hidden=True)
+async def shutdown(ctx):
+    await ctx.send("Shutting down...")
+    await bot.logout()
+    os._exit(0)
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    error = getattr(error, 'original', error)
+    if hasattr(bot.get_cog(ctx.command.cog_name), '_' + ctx.command.cog_name + '__error'):
+        return
+    if isinstance(error, discord.ext.commands.CommandNotFound):
+        return
+    if isinstance(error, discord.ext.commands.CheckFailure):
+        await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
+    elif isinstance(error, discord.ext.commands.MissingRequiredArgument):
+        await ctx.send("{} You are missing required arguments.".format(ctx.message.author.mention))
+    else:
+        if ctx.command:
+            await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
+        logger.exception(error)
+
+
+@bot.event
+async def on_ready():
+    logger.info("Connected.")
+    main_server = discord.utils.get(bot.guilds, id=401014193211441153)
+
+    bot.builds_channel = main_server.get_channel(401070313179185152)
+    bot.commits_channel = main_server.get_channel(401017666577629214)
+
+for extension in os.listdir("cogs"):
+    if extension.endswith('.py'):
+        try:
+            bot.load_extension("cogs." + extension[:-3])
+        except Exception as e:
+            logger.exception('Failed to load extension {}'.format(extension))
+
+bot.run(config['token'])
