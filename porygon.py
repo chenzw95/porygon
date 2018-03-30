@@ -51,49 +51,47 @@ if __name__ == "__main__":
     bot.config = config
 
 
-@check_permissions_or_owner(administrator=True)
-@bot.command(hidden=True)
-async def restart(ctx):
-    await ctx.send("Restarting...")
-    await bot.logout()
-    os._exit(1)
+    @check_permissions_or_owner(administrator=True)
+    @bot.command(hidden=True)
+    async def restart(ctx):
+        await ctx.send("Restarting...")
+        await bot.logout()
+        os._exit(1)
 
 
-@check_permissions_or_owner(administrator=True)
-@bot.command(hidden=True)
-async def shutdown(ctx):
-    await ctx.send("Shutting down...")
-    await bot.logout()
-    os._exit(0)
+    @check_permissions_or_owner(administrator=True)
+    @bot.command(hidden=True)
+    async def shutdown(ctx):
+        await ctx.send("Shutting down...")
+        await bot.logout()
+        os._exit(0)
 
 
-@bot.event
-async def on_command_error(ctx, error):
-    error = getattr(error, 'original', error)
-    if hasattr(ctx.command, 'on_error') or hasattr(ctx.cog, '_{0.__class__.__name__}__error'.format(ctx.cog)):
-        return
-    if isinstance(error, discord.ext.commands.CommandNotFound):
-        return
-    if isinstance(error, discord.ext.commands.CheckFailure):
-        await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
-    elif isinstance(error, discord.ext.commands.MissingRequiredArgument):
-        await ctx.send("{} You are missing required arguments.".format(ctx.message.author.mention))
-    else:
-        if ctx.command:
-            await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
-        logger.exception(error)
+    @bot.event
+    async def on_command_error(ctx, error):
+        error = getattr(error, 'original', error)
+        if hasattr(ctx.command, 'on_error') or hasattr(ctx.cog, '_{0.__class__.__name__}__error'.format(ctx.cog)):
+            return
+        if isinstance(error, discord.ext.commands.CommandNotFound):
+            return
+        if isinstance(error, discord.ext.commands.CheckFailure):
+            await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
+        elif isinstance(error, discord.ext.commands.MissingRequiredArgument):
+            await ctx.send("{} You are missing required arguments.".format(ctx.message.author.mention))
+        else:
+            if ctx.command:
+                await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
+            logger.exception(error)
 
 
-@bot.event
-async def on_ready():
-    logger.info("Connected.")
-    main_server = discord.utils.get(bot.guilds, id=401014193211441153)
+    @bot.event
+    async def on_ready():
+        logger.info("Connected.")
+        main_server = discord.utils.get(bot.guilds, id=401014193211441153)
 
-    bot.builds_channel = main_server.get_channel(401070313179185152)
-    bot.commits_channel = main_server.get_channel(401017666577629214)
+        bot.builds_channel = main_server.get_channel(401070313179185152)
+        bot.commits_channel = main_server.get_channel(401017666577629214)
 
-
-if __name__ == "__main__":
     for extension in os.listdir("cogs"):
         if extension.endswith('.py'):
             try:
