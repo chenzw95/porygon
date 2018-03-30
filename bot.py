@@ -35,20 +35,22 @@ def check_permissions_or_owner(**perms):
     return commands.check(predicate)
 
 
-logger = initLogging()
-logger.info("Initializing...")
-signal.signal(signal.SIGTERM, sig_handler)
-signal.signal(signal.SIGINT, sig_handler)
-try:
-    with open("config.json") as c:
-        config = json.load(c)
-except FileNotFoundError:
-    logger.error("Config file not found, quitting!")
-    sys.exit(-1)
-bot = commands.Bot(command_prefix=config['prefix'],
-                   description='Porygon',
-                   max_messages=100)
-bot.config = config
+if __name__ == "__main__":
+    logger = initLogging()
+    logger.info("Initializing...")
+    signal.signal(signal.SIGTERM, sig_handler)
+    signal.signal(signal.SIGINT, sig_handler)
+    try:
+        with open("config.json") as c:
+            config = json.load(c)
+    except FileNotFoundError:
+        logger.error("Config file not found, quitting!")
+        sys.exit(-1)
+    bot = commands.Bot(command_prefix=config['prefix'],
+                       description='Porygon',
+                       max_messages=100)
+    bot.config = config
+
 
 @check_permissions_or_owner(administrator=True)
 @bot.command(hidden=True)
@@ -91,11 +93,13 @@ async def on_ready():
     bot.builds_channel = main_server.get_channel(401070313179185152)
     bot.commits_channel = main_server.get_channel(401017666577629214)
 
-for extension in os.listdir("cogs"):
-    if extension.endswith('.py'):
-        try:
-            bot.load_extension("cogs." + extension[:-3])
-        except Exception as e:
-            logger.exception('Failed to load extension {}'.format(extension))
 
-bot.run(config['token'])
+if __name__ == "__main__":
+    for extension in os.listdir("cogs"):
+        if extension.endswith('.py'):
+            try:
+                bot.load_extension("cogs." + extension[:-3])
+            except Exception as e:
+                logger.exception('Failed to load extension {}'.format(extension))
+
+    bot.run(config['token'])
