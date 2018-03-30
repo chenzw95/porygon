@@ -15,10 +15,17 @@ class BuildCog:
     @commands.guild_only()
     @commands.cooldown(rate=1, per=600.0)
     @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
-    async def build(self, ctx):
+    async def build(self, ctx, mgdb_commit: bool=False):
+        """
+        Initiates a new build on AppVeyor.
+
+        Specify mgdb_commit as true to have the MGDB Downloader download the full database.
+        """
         async with aiohttp.ClientSession(loop=self.bot.loop, headers={"User-Agent": "Porygon"}) as session:
             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
             reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
+            if mgdb_commit:
+                reqBody.update({"environmentVariables": {"latestcommit": "true"}})
             async with session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
                                     json=reqBody) as resp:
                 if resp.status == 200:
@@ -26,6 +33,8 @@ class BuildCog:
                     embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
                     embed.title = "Build requested"
                     embed.add_field(name="User", value=ctx.message.author.name)
+                    if mgdb_commit:
+                        embed.add_field(name="Notice", value="This build will download the entire (non-release version) MGDB.")
                     await self.bot.builds_channel.send(embed=embed)
                 else:
                     response = await resp.text()
