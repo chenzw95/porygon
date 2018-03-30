@@ -6,6 +6,7 @@ import sys
 
 import discord
 from discord.ext import commands
+from cogs.utils import checks
 
 
 def initLogging():
@@ -21,17 +22,6 @@ def sig_handler(signum, frame):
     # logger.shutdown()
     sys.exit()
 
-
-def check_permissions_or_owner(**perms):
-    def predicate(ctx):
-        msg = ctx.message
-        if str(msg.author.id) == config['owner']:
-            return True
-        ch = msg.channel
-        permissions = ch.permissions_for(msg.author)
-        return all(getattr(permissions, perm, None) == value for perm, value in perms.items())
-
-    return commands.check(predicate)
 
 
 if __name__ == "__main__":
@@ -51,7 +41,7 @@ if __name__ == "__main__":
     bot.config = config
 
 
-    @check_permissions_or_owner(administrator=True)
+    @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
     async def restart(ctx):
         await ctx.send("Restarting...")
@@ -59,7 +49,7 @@ if __name__ == "__main__":
         os._exit(1)
 
 
-    @check_permissions_or_owner(administrator=True)
+    @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
     async def shutdown(ctx):
         await ctx.send("Shutting down...")
