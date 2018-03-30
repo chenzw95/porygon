@@ -2,27 +2,15 @@ import json
 import logging
 
 from discord.ext import commands
+from .utils import checks
 
 
 class CogAdminCog:
     def __init__(self, bot):
         self.bot = bot
 
-    def check_permissions_or_owner(**perms):
-        def predicate(ctx):
-            with open("config.json") as c:
-                config = json.load(c)
-            msg = ctx.message
-            if str(msg.author.id) == config['owner']:
-                return True
-            ch = msg.channel
-            permissions = ch.permissions_for(msg.author)
-            return all(getattr(permissions, perm, None) == value for perm, value in perms.items())
-
-        return commands.check(predicate)
-
     @commands.command()
-    @check_permissions_or_owner(administrator=True)
+    @checks.check_permissions_or_owner(administrator=True)
     async def reload(self, ctx, module: str):
         if module[0:5] != "cogs.":
             module = "cogs." + module
@@ -35,7 +23,7 @@ class CogAdminCog:
             logger.exception(e)
 
     @commands.command()
-    @check_permissions_or_owner(administrator=True)
+    @checks.check_permissions_or_owner(administrator=True)
     async def load(self, ctx, module: str):
         if module[0:5] != "cogs.":
             module = "cogs." + module
@@ -47,7 +35,7 @@ class CogAdminCog:
             logger.exception(e)
 
     @commands.command()
-    @check_permissions_or_owner(administrator=True)
+    @checks.check_permissions_or_owner(administrator=True)
     async def unload(self, ctx, module: str):
         if module[0:5] != "cogs.":
             module = "cogs." + module
