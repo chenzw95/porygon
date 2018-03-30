@@ -1,10 +1,9 @@
-import os
-import sys
 import json
-import signal
 import logging
+import os
+import signal
+import sys
 
-import asyncio
 import discord
 from discord.ext import commands
 

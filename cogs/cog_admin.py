@@ -1,9 +1,8 @@
-import discord
+import logging
+
 from discord.ext import commands
 
 from ..bot import check_permissions_or_owner
-
-import logging
 
 
 class CogAdminCog:
