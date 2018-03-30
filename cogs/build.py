@@ -62,6 +62,8 @@ class BuildCog:
             else:
                 await ctx.send("This command is on cooldown (executed {:.0f} seconds ago). You will be able to use this command again in {:.0f} seconds.".format(
                         error.cooldown.per - error.retry_after, error.retry_after))
+        elif isinstance(error, discord.ext.commands.CheckFailure):
+            await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
 
 
 def setup(bot):
