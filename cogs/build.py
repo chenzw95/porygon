@@ -35,6 +35,8 @@ class BuildCog:
                     embed.add_field(name="User", value=ctx.message.author.name)
                     if mgdb_commit:
                         embed.add_field(name="Notice", value="This build will download the entire (non-release version) MGDB.")
+                    else:
+                        embed.add_field(name="Notice", value="This build will download the latest release version of MGDB.")                        
                     await self.bot.builds_channel.send(embed=embed)
                 else:
                     response = await resp.text()
