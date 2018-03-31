@@ -21,6 +21,7 @@ class BuildCog:
 
         Specify mgdb_commit as true to have the MGDB Downloader download the full database.
         """
+        await ctx.trigger_typing()
         async with aiohttp.ClientSession(loop=self.bot.loop, headers={"User-Agent": "Porygon"}) as session:
             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
             reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
