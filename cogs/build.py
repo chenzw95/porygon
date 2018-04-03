@@ -42,7 +42,7 @@ class BuildCog:
                 else:
                     response = await resp.text()
                     logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
-                    ctx.send("⚠️ Request failed. Details have been logged to console.")
+                    await ctx.send("⚠️ Request failed. Details have been logged to console.")
 
 
     @build.error
