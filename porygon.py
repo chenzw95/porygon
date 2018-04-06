@@ -68,7 +68,7 @@ if __name__ == "__main__":
         else:
             if ctx.command:
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
-            logger.exception(error)
+            logger.exception(error, exc_info=error)
 
     @bot.event
     async def on_ready():
