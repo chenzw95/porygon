@@ -99,6 +99,8 @@ class Mod:
             await ctx.send("User could not be found.")
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send("⚠ I don't have the permissions to do this.")
+        elif isinstance(error, commands.CheckFailure):
+            await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
 
     @promote.error
     async def promote_handler(self, ctx, error):
