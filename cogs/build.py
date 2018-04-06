@@ -69,6 +69,6 @@ class BuildCog:
 
 def setup(bot):
     global logger
-    logger = logging.getLogger("build")
+    logger = logging.getLogger("cog-build")
     logger.setLevel(logging.INFO)
     bot.add_cog(BuildCog(bot))

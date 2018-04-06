@@ -67,6 +67,6 @@ class Debug:
 
 def setup(bot):
     global logger
-    logger = logging.getLogger("debug-admin")
+    logger = logging.getLogger("cog-debug")
     logger.setLevel(logging.INFO)
     bot.add_cog(Debug(bot))
