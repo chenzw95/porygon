@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from .utils import checks
 
-class CogAdminCog:
+class Debug:
     def __init__(self, bot):
         self.bot = bot
 
@@ -51,6 +51,6 @@ class CogAdminCog:
 
 def setup(bot):
     global logger
-    logger = logging.getLogger("cog-admin")
+    logger = logging.getLogger("debug-admin")
     logger.setLevel(logging.INFO)
-    bot.add_cog(CogAdminCog(bot))
+    bot.add_cog(Debug(bot))
