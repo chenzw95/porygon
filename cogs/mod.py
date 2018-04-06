@@ -56,6 +56,7 @@ class Mod:
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
         embed.title = "Kicked user"
         embed.add_field(name="User", value=user.mention)
+        embed.add_field(name="Action taken by", value=ctx.author.name)
         if user:
             if author.top_role.position < user.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
@@ -77,6 +78,7 @@ class Mod:
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
         embed.title = "Banned user"
         embed.add_field(name="User", value=user.mention)
+        embed.add_field(name="Action taken by", value=ctx.author.name)
         if user:
             if author.top_role.position < user.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
