@@ -10,7 +10,6 @@ class BuildCog:
     def __init__(self, bot):
         self.bot = bot
 
-
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(rate=1, per=600.0)
@@ -43,7 +42,6 @@ class BuildCog:
                     response = await resp.text()
                     logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
                     await ctx.send("⚠️ Request failed. Details have been logged to console.")
-
 
     @build.error
     async def rebuild_handler(self, ctx, error):

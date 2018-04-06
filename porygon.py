@@ -23,7 +23,6 @@ def sig_handler(signum, frame):
     sys.exit()
 
 
-
 if __name__ == "__main__":
     logger = initLogging()
     logger.info("Initializing...")
@@ -48,14 +47,12 @@ if __name__ == "__main__":
         await bot.logout()
         os._exit(1)
 
-
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
     async def shutdown(ctx):
         await ctx.send("Shutting down...")
         await bot.logout()
         os._exit(0)
-
 
     @bot.event
     async def on_command_error(ctx, error):
@@ -72,7 +69,6 @@ if __name__ == "__main__":
             if ctx.command:
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
             logger.exception(error)
-
 
     @bot.event
     async def on_ready():
