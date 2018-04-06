@@ -56,7 +56,7 @@ class Debug:
         embed.add_field(name="Hoisted", value=role.hoist, inline=False).add_field(name="Mentionable", value=role.mentionable)
         await ctx.send(embed=embed)
 
-    @roleinfo.error()
+    @roleinfo.error
     async def info_handler(self, ctx, error):
         error = getattr(error, 'original', error)
         if isinstance(error, discord.ext.commands.BadArgument):
