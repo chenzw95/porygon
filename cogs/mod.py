@@ -11,7 +11,7 @@ class Mod:
 
     async def on_member_join(self, user):
         embed = discord.Embed(color=discord.Color.green())
-        embed.title = "New Member"
+        embed.title = "New member"
         embed.add_field(name="User", value=user.mention)
         await self.bot.modlog_channel.send(embed=embed)
         welcome = discord.Embed(color=discord.Color.gold())
@@ -21,7 +21,7 @@ class Mod:
 
     async def on_member_remove(self, user):
         embed = discord.Embed(color=discord.Color.red())
-        embed.title = "Member Left"
+        embed.title = "Member left"
         embed.add_field(name="User", value=user.mention)
         await self.bot.modlog_channel.send(embed=embed)
 
@@ -49,67 +49,61 @@ class Mod:
 
     @commands.command()
     @checks.check_permissions_or_owner(kick_members=True)
+    @commands.bot_has_permissions(kick_members=True)
     async def kick(self, ctx, user: discord.Member, *, reason: str = None):
         """Kicks the user"""
         author = ctx.message.author
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
-        embed.title = "Kicked User"
+        embed.title = "Kicked user"
         embed.add_field(name="User", value=user.mention)
         if user:
             if author.top_role.position < user.top_role.position + 1:
-                return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role heirarchy")
+                return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
-                try:
-                    await user.kick(reason=reason)
-                    return_msg = "Kicked User: {}".format(user.mention)
-                    if reason:
-                        return_msg += " for reason `{}`".format(reason)
-                    return_msg += "."
-                    await ctx.send(return_msg)
-                    await self.bot.modlog_channel.send(embed=embed)
-                except discord.Forbidden:
-                    await ctx.send("Porygon does not have enough permissions to perform a kick")
-        else:
-            return await ctx.send("Could not find any such user")
+                await user.kick(reason=reason)
+                return_msg = "Kicked user: {}".format(user.mention)
+                if reason:
+                    return_msg += " for reason `{}`".format(reason)
+                return_msg += "."
+                await ctx.send(return_msg)
+                await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
     @checks.check_permissions_or_owner(ban_members=True)
+    @commands.bot_has_permissions(ban_members=True)
     async def ban(self, ctx, user:discord.Member, *, reason: str = None):
         """Bans the user"""
         author = ctx.message.author
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
-        embed.title = "Banned User"
+        embed.title = "Banned user"
         embed.add_field(name="User", value=user.mention)
         if user:
             if author.top_role.position < user.top_role.position + 1:
-                return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role heirarchy")
+                return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
-                try:
-                    await user.ban(reason=reason)
-                    return_msg = "Banned User: {}".format(user.mention)
-                    if reason:
-                        return_msg += " for reason `{}`".format(reason)
-                    return_msg += "."
-                    await ctx.send(return_msg)
-                    await self.bot.modlog_channel.send(embed=embed)
-                except discord.Forbidden:
-                    await ctx.send("Porygon does not have enough permissions to perform a ban")
-        else:
-            return await ctx.send("Could not find any such user")
+                await user.ban(reason=reason)
+                return_msg = "Banned user: {}".format(user.mention)
+                if reason:
+                    return_msg += " for reason `{}`".format(reason)
+                return_msg += "."
+                await ctx.send(return_msg)
+                await self.bot.modlog_channel.send(embed=embed)
 
     @kick.error
     @ban.error
     async def kick_handler(self, ctx, error):
         error = getattr(error, 'original', error)
-        if isinstance(error, discord.ext.commands.BadArgument):
-            await ctx.send("User could not be found")
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("User could not be found.")
+        elif isinstance(error, commands.BotMissingPermissions):
+            await ctx.send("⚠ I don't have the permissions to do this.")
 
     @promote.error
     async def promote_handler(self, ctx, error):
         error = getattr(error, 'original', error)
-        if isinstance(error, discord.ext.commands.BadArgument):
+        if isinstance(error, commands.BadArgument):
             await ctx.send("{} User could not be found! Usage of this command is as follows ```!promote <user> <role>```".format(ctx.message.author.mention))
-        elif isinstance(error, discord.ext.commands.CheckFailure):
+        elif isinstance(error, commands.CheckFailure):
             await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
 
 
