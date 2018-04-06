@@ -54,6 +54,15 @@ class Debug:
         embed = discord.Embed(title="Role information", color=role.color, timestamp=ctx.message.created_at)
         embed.add_field(name="Name", value=role.name).add_field(name="ID", value=role.id)
         embed.add_field(name="Hoisted", value=role.hoist, inline=False).add_field(name="Mentionable", value=role.mentionable)
+        await ctx.send(embed=embed)
+
+    @roleinfo.error()
+    async def info_handler(self, ctx, error):
+        error = getattr(error, 'original', error)
+        if isinstance(error, discord.ext.commands.BadArgument):
+            await ctx.send("❌ Object not found.")
+        elif isinstance(error, discord.ext.commands.NoPrivateMessage):
+            await ctx.send("⚠ This command must be executed in a server!")
 
 
 def setup(bot):
