@@ -44,6 +44,8 @@ class Mod:
                 await self.bot.modlog_channel.send(embed=embed)
             else:
                 await ctx.send("{} : {} already has this role!".format(ctx.author.mention, user.name))
+        else:
+            await ctx.send("⚠ Unrecognised role!")
 
     @commands.command()
     @checks.check_permissions_or_owner(kick_members=True)
