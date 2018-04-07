@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -6,6 +7,7 @@ import sys
 
 import discord
 from discord.ext import commands
+
 from cogs.utils import checks
 
 
@@ -28,6 +30,12 @@ if __name__ == "__main__":
     logger.info("Initializing...")
     signal.signal(signal.SIGTERM, sig_handler)
     signal.signal(signal.SIGINT, sig_handler)
+    try:
+        import uvloop
+    except ImportError:
+        pass
+    else:
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     try:
         with open("config.json") as c:
             config = json.load(c)
