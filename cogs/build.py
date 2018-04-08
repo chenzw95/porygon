@@ -12,7 +12,7 @@ class BuildCog:
 
     @commands.command()
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=600.0)
+    @commands.cooldown(rate=1, per=7200.0)
     @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
     async def build(self, ctx, mgdb_commit: bool=False):
         """
