@@ -13,6 +13,8 @@ class Mod:
         embed = discord.Embed(color=discord.Color.green())
         embed.title = "New member"
         embed.add_field(name="User", value=user.mention)
+        embed.add_field(name="Joined at", value=user.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
+        embed.add_field(name="Created at", value=user.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         await self.bot.modlog_channel.send(embed=embed)
         welcome = discord.Embed(color=discord.Color.gold())
         welcome.title = "Welcome to the PKHeX Auto Legality Mods server, {}!".format(user.name)
