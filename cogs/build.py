@@ -43,7 +43,57 @@ class BuildCog:
                     logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
                     await ctx.send("⚠️ Request failed. Details have been logged to console.")
 
+    @commands.command()
+    @commands.guild_only()
+    @commands.cooldown(rate=1, per=7200.0)
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    async def buildme(self, ctx, mgdb_commit: bool = False):
+        """
+                Initiates a new build on AppVeyor. Will not ping those subscribed to build updates.
+
+                Specify mgdb_commit as true to have the MGDB Downloader download the full database.
+                """
+        await ctx.trigger_typing()
+        async with aiohttp.ClientSession(loop=self.bot.loop, headers={"User-Agent": "Porygon"}) as session:
+            headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
+                          'Content-Type': 'application/json'}
+            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
+            envVars = {"notifyall": "false"}
+            if mgdb_commit:
+                envVars["latestcommit"] = "true"
+            reqBody["environmentVariables"] = envVars
+            async with session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
+                                    json=reqBody) as resp:
+                if resp.status == 200:
+                    await ctx.message.add_reaction("✅")
+                    embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
+                    embed.title = "Private build requested"
+                    embed.add_field(name="User", value=ctx.message.author.name)
+                    if mgdb_commit:
+                        embed.add_field(name="Notice",
+                                        value="This build will download the entire (non-release version) MGDB.")
+                    else:
+                        embed.add_field(name="Notice",
+                                        value="This build will download the latest release version of MGDB.")
+                    await self.bot.builds_channel.send(embed=embed)
+                else:
+                    response = await resp.text()
+                    logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
+                    await ctx.send("⚠️ Request failed. Details have been logged to console.")
+        check = lambda m: m.channel == self.bot.builds_channel and m.author.name == "BuildBot" and m.author.discriminator == "0000"
+        try:
+            build_result = await self.bot.wait_for('message', check=check, timeout=300.0)
+        except asyncio.TimeoutError:
+            return await ctx.send("⚠ Failed to read build notification from AppVeyor.")
+        try:
+            await ctx.message.author.send("⚙ {0.mention}, your requested build is complete. Details are available in {1.mention}."
+                                          .format(ctx.message.author, self.bot.builds_channel))
+        except discord.Forbidden:
+            await ctx.send("⚙ {0.mention}, your requested build is complete. Details are available in {1.mention}."
+                           .format(ctx.message.author, self.bot.builds_channel))
+
     @build.error
+    @buildme.error
     async def rebuild_handler(self, ctx, error):
         error = getattr(error, 'original', error)
         if isinstance(error, discord.ext.commands.CommandOnCooldown):
