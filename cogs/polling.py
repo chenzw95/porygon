@@ -25,7 +25,9 @@ class CommitTracker:
         commit = self.bot.config['basecommit']
         while True:
             oldcommit=commit
-            data = await self.get_latest_commit('kwsch', 'pkhex') 
+            owner = 'kwsch'
+            repo = 'pkhex'
+            data = await self.get_latest_commit(owner, repo) 
             try:
                 commitdata = json.loads(data)[0]
             except KeyError:
@@ -41,7 +43,7 @@ class CommitTracker:
                     conf.truncate()
                     json.dump(newconfig, conf, indent=4)
                 embed = discord.Embed(color=7506394)
-                embed.title = "[PKHeX:master] 1 new commit"
+                embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
                 embed.url = commitdata['html_url']
                 embed.set_author(name=commitdata['author']['login'], icon_url=commitdata['author']['avatar_url'], url=commitdata['author']['html_url'])
                 embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitdata['commit']['message'].split("\n\n")[0], commitauthor=commitdata['author']['login'])
