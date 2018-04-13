@@ -26,7 +26,7 @@ class CommitTracker:
         while True:
             oldcommit=commit
             owner = 'kwsch'
-            repo = 'pkhex'
+            repo = 'PKHeX'
             data = await self.get_latest_commit(owner, repo) 
             try:
                 commitdata = json.loads(data)[0]
