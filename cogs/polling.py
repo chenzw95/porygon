@@ -1,7 +1,6 @@
 import discord
 import aiohttp
 import asyncio
-from urllib.request import urlopen
 import json, time
 
 from discord.ext import commands
