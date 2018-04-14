@@ -16,8 +16,6 @@ class CommitTracker:
 
     def __unload(self):
         self.polling_task.cancel()
-        with suppress(asyncio.CancelledError):
-            self.bot.loop.run_until_complete(self.polling_task)
 
     async def get_latest_commit(self, owner, repo):
         url = 'https://api.github.com/repos/{owner}/{repo}/commits?per_page=1'.format(owner=owner, repo=repo)
