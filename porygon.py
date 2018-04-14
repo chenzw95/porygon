@@ -87,6 +87,7 @@ if __name__ == "__main__":
         bot.commits_channel = main_server.get_channel(401017666577629214)
         bot.modlog_channel = main_server.get_channel(431429919185174547)
         bot.general_channel = main_server.get_channel(401014193211441161)
+        bot.basecommits_channel = main_server.get_channel(434030604179472384)
 
     for extension in os.listdir("cogs"):
         if extension.endswith('.py'):
