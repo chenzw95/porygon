@@ -11,6 +11,21 @@ class Debug:
 
     @commands.command()
     @checks.check_permissions_or_owner(administrator=True)
+    async def rehash(self, ctx):
+        """Reloads bot configuration."""
+        logger.info("Reloading configuration...")
+        try:
+            with open("config.json") as c:
+                config = json.load(c)
+            for channel, cid in config['channels'].items():
+                setattr(self.bot, "{}_channel".format(channel), self.bot.main_server.get_channel(cid))
+        except Exception as e:
+            await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
+            logger.exception(e)
+        await ctx.send("✅ Configuration reloaded.")
+
+    @commands.command()
+    @checks.check_permissions_or_owner(administrator=True)
     async def reload(self, ctx, module: str):
         if module[0:5] != "cogs.":
             module = "cogs." + module

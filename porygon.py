@@ -81,13 +81,9 @@ if __name__ == "__main__":
     @bot.event
     async def on_ready():
         logger.info("Connected.")
-        main_server = discord.utils.get(bot.guilds, id=401014193211441153)
-
-        bot.builds_channel = main_server.get_channel(401070313179185152)
-        bot.commits_channel = main_server.get_channel(401017666577629214)
-        bot.modlog_channel = main_server.get_channel(431429919185174547)
-        bot.general_channel = main_server.get_channel(401014193211441161)
-        bot.basecommits_channel = main_server.get_channel(434030604179472384)
+        bot.main_server = discord.utils.get(bot.guilds, id=401014193211441153)
+        for channel, cid in config['channels'].items():
+            setattr(bot, "{}_channel".format(channel), bot.main_server.get_channel(cid))
 
     for extension in os.listdir("cogs"):
         if extension.endswith('.py'):
