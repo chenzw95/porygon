@@ -4,6 +4,7 @@ import asyncio
 import logging
 import json, time
 
+from contextlib import suppress
 from discord.ext import commands
 from .utils import checks
 
@@ -11,6 +12,12 @@ from .utils import checks
 class CommitTracker:
     def __init__(self, bot):
         self.bot = bot
+        self.polling_task = bot.loop.create_task(self.trackCommits())
+
+    def __unload(self):
+        self.polling_task.cancel()
+        with suppress(asyncio.CancelledError):
+            self.bot.loop.run_until_complete(self.polling_task)
 
     async def get_latest_commit(self, owner, repo):
         url = 'https://api.github.com/repos/{owner}/{repo}/commits?per_page=1'.format(owner=owner, repo=repo)
@@ -49,6 +56,4 @@ def setup(bot):
     global logger
     logger = logging.getLogger("cog-debug")
     logger.setLevel(logging.INFO)
-    c = CommitTracker(bot)
-    bot.loop.create_task(c.trackCommits())
-    bot.add_cog(c)
+    bot.add_cog(CommitTracker(bot))
