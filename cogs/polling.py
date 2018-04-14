@@ -25,8 +25,8 @@ class CommitTracker:
 
     async def trackCommits(self):
         await self.bot.wait_until_ready()
-        oldcommit = self.bot.config['basecommit']
         while True:
+            oldcommit = self.bot.config['basecommit']
             owner = 'kwsch'
             repo = 'PKHeX'
             data = await self.get_latest_commit(owner, repo) 
