@@ -20,9 +20,8 @@ class CommitTracker:
 
     async def trackCommits(self):
         await self.bot.wait_until_ready()
-        commit = self.bot.config['basecommit']
+        oldcommit = self.bot.config['basecommit']
         while True:
-            oldcommit=commit
             owner = 'kwsch'
             repo = 'PKHeX'
             data = await self.get_latest_commit(owner, repo) 
@@ -32,14 +31,11 @@ class CommitTracker:
                 print(json.loads(data))
             commit = commitdata['sha']
             if commit != oldcommit:
-                oldcommit = commit
                 self.bot.config['basecommit'] = commit
                 with open("config.json", 'r+') as conf:
-                    newconfig = json.load(conf)
-                    newconfig['basecommit'] = commit
                     conf.seek(0)
                     conf.truncate()
-                    json.dump(newconfig, conf, indent=4)
+                    json.dump(self.bot.config, conf, indent=4)
                 embed = discord.Embed(color=7506394)
                 embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
                 embed.url = commitdata['html_url']
