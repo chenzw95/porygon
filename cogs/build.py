@@ -49,10 +49,10 @@ class BuildCog:
     @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
     async def buildme(self, ctx, mgdb_commit: bool = False):
         """
-                Initiates a new build on AppVeyor. Will not ping those subscribed to build updates.
+        Initiates a new build on AppVeyor. Will not ping those subscribed to build updates.
 
-                Specify mgdb_commit as true to have the MGDB Downloader download the full database.
-                """
+        Specify mgdb_commit as true to have the MGDB Downloader download the full database.
+        """
         await ctx.trigger_typing()
         async with aiohttp.ClientSession(loop=self.bot.loop, headers={"User-Agent": "Porygon"}) as session:
             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
