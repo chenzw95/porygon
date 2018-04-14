@@ -1,12 +1,8 @@
-import discord
-import aiohttp
 import asyncio
+import json
 import logging
-import json, time
 
-from contextlib import suppress
-from discord.ext import commands
-from .utils import checks
+import discord
 
 
 class CommitTracker:
@@ -19,9 +15,8 @@ class CommitTracker:
 
     async def get_latest_commit(self, owner, repo):
         url = 'https://api.github.com/repos/{owner}/{repo}/commits?per_page=1'.format(owner=owner, repo=repo)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                return await response.text()
+        async with self.bot.session.get(url) as response:
+            return await response.text()
 
     async def trackCommits(self):
         await self.bot.wait_until_ready()

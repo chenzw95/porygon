@@ -5,6 +5,7 @@ import os
 import signal
 import sys
 
+import aiohttp
 import discord
 from discord.ext import commands
 
@@ -80,10 +81,11 @@ if __name__ == "__main__":
 
     @bot.event
     async def on_ready():
-        logger.info("Connected.")
+        logger.info("Connected as UID {}.".format(bot.user.id))
         bot.main_server = discord.utils.get(bot.guilds, id=401014193211441153)
         for channel, cid in config['channels'].items():
             setattr(bot, "{}_channel".format(channel), bot.main_server.get_channel(cid))
+        bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": "Porygon"})
 
     for extension in os.listdir("cogs"):
         if extension.endswith('.py'):

@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-import aiohttp
 import discord
 from discord.ext import commands
 
@@ -21,27 +20,26 @@ class BuildCog:
         Specify mgdb_commit as true to have the MGDB Downloader download the full database.
         """
         await ctx.trigger_typing()
-        async with aiohttp.ClientSession(loop=self.bot.loop, headers={"User-Agent": "Porygon"}) as session:
-            headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
-            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
-            if mgdb_commit:
-                reqBody.update({"environmentVariables": {"latestcommit": "true"}})
-            async with session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
-                                    json=reqBody) as resp:
-                if resp.status == 200:
-                    await ctx.message.add_reaction("✅")
-                    embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
-                    embed.title = "Build requested"
-                    embed.add_field(name="User", value=ctx.message.author.name)
-                    if mgdb_commit:
-                        embed.add_field(name="Notice", value="This build will download the entire (non-release version) MGDB.")
-                    else:
-                        embed.add_field(name="Notice", value="This build will download the latest release version of MGDB.")                        
-                    await self.bot.builds_channel.send(embed=embed)
+        headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
+        reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
+        if mgdb_commit:
+            reqBody.update({"environmentVariables": {"latestcommit": "true"}})
+        async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
+                                json=reqBody) as resp:
+            if resp.status == 200:
+                await ctx.message.add_reaction("✅")
+                embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
+                embed.title = "Build requested"
+                embed.add_field(name="User", value=ctx.message.author.name)
+                if mgdb_commit:
+                    embed.add_field(name="Notice", value="This build will download the entire (non-release version) MGDB.")
                 else:
-                    response = await resp.text()
-                    logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
-                    await ctx.send("⚠️ Request failed. Details have been logged to console.")
+                    embed.add_field(name="Notice", value="This build will download the latest release version of MGDB.")
+                await self.bot.builds_channel.send(embed=embed)
+            else:
+                response = await resp.text()
+                logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
+                await ctx.send("⚠️ Request failed. Details have been logged to console.")
 
     @commands.command()
     @commands.guild_only()
@@ -54,32 +52,31 @@ class BuildCog:
         Specify mgdb_commit as true to have the MGDB Downloader download the full database.
         """
         await ctx.trigger_typing()
-        async with aiohttp.ClientSession(loop=self.bot.loop, headers={"User-Agent": "Porygon"}) as session:
-            headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
-                          'Content-Type': 'application/json'}
-            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
-            envVars = {"notifyall": "false"}
-            if mgdb_commit:
-                envVars["latestcommit"] = "true"
-            reqBody["environmentVariables"] = envVars
-            async with session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
-                                    json=reqBody) as resp:
-                if resp.status == 200:
-                    await ctx.message.add_reaction("✅")
-                    embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
-                    embed.title = "Private build requested"
-                    embed.add_field(name="User", value=ctx.message.author.name)
-                    if mgdb_commit:
-                        embed.add_field(name="Notice",
-                                        value="This build will download the entire (non-release version) MGDB.")
-                    else:
-                        embed.add_field(name="Notice",
-                                        value="This build will download the latest release version of MGDB.")
-                    await self.bot.builds_channel.send(embed=embed)
+        headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
+                      'Content-Type': 'application/json'}
+        reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
+        envVars = {"notifyall": "false"}
+        if mgdb_commit:
+            envVars["latestcommit"] = "true"
+        reqBody["environmentVariables"] = envVars
+        async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
+                                json=reqBody) as resp:
+            if resp.status == 200:
+                await ctx.message.add_reaction("✅")
+                embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
+                embed.title = "Private build requested"
+                embed.add_field(name="User", value=ctx.message.author.name)
+                if mgdb_commit:
+                    embed.add_field(name="Notice",
+                                    value="This build will download the entire (non-release version) MGDB.")
                 else:
-                    response = await resp.text()
-                    logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
-                    await ctx.send("⚠️ Request failed. Details have been logged to console.")
+                    embed.add_field(name="Notice",
+                                    value="This build will download the latest release version of MGDB.")
+                await self.bot.builds_channel.send(embed=embed)
+            else:
+                response = await resp.text()
+                logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
+                await ctx.send("⚠️ Request failed. Details have been logged to console.")
         check = lambda m: m.channel == self.bot.builds_channel and m.author.name == "BuildBot" and m.author.discriminator == "0000"
         try:
             build_result = await self.bot.wait_for('message', check=check, timeout=300.0)
