@@ -1,6 +1,7 @@
 import discord
 import aiohttp
 import asyncio
+import logging
 import json, time
 
 from discord.ext import commands
@@ -49,7 +50,11 @@ class CommitTracker:
                 await self.bot.basecommits_channel.send(embed=embed)
             await asyncio.sleep(self.wait_time)
 
+
 def setup(bot):
+    global logger
+    logger = logging.getLogger("cog-debug")
+    logger.setLevel(logging.INFO)
     c = CommitTracker(bot)
     bot.loop.create_task(c.trackCommits())
     bot.add_cog(c)
