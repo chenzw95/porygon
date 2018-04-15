@@ -16,7 +16,7 @@ class CommitTracker:
     async def get_latest_commit(self, owner, repo):
         url = 'https://api.github.com/repos/{owner}/{repo}/commits?per_page=1'.format(owner=owner, repo=repo)
         async with self.bot.session.get(url) as response:
-            return await response.text()
+            return await response.json()
 
     async def trackCommits(self):
         await self.bot.wait_until_ready()
@@ -26,9 +26,9 @@ class CommitTracker:
             repo = 'PKHeX'
             data = await self.get_latest_commit(owner, repo) 
             try:
-                commitdata = json.loads(data)[0]
+                commitdata = data[0]
             except KeyError:
-                print(json.loads(data))
+                logger.error("Repo polling failed: {}".format(data))
             commit = commitdata['sha']
             if commit != oldcommit:
                 self.bot.config['basecommit'] = commit
@@ -47,6 +47,6 @@ class CommitTracker:
 
 def setup(bot):
     global logger
-    logger = logging.getLogger("cog-debug")
+    logger = logging.getLogger("cog-polling")
     logger.setLevel(logging.INFO)
     bot.add_cog(CommitTracker(bot))
