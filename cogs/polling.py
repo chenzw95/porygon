@@ -40,7 +40,10 @@ class CommitTracker:
                 embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
                 embed.url = commitdata['html_url']
                 embed.set_author(name=commitdata['author']['login'], icon_url=commitdata['author']['avatar_url'], url=commitdata['author']['html_url'])
-                embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitdata['commit']['message'].split("\n\n")[0], commitauthor=commitdata['author']['login'])
+                commitmessage = commitdata['commit']['message'].split("\n\n")[0]
+                if (len(commitmessage) > 50):
+                    commitmessage = commitmessage[:47]+"..."
+                embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitmessage, commitauthor=commitdata['author']['login'])
                 await self.bot.basecommits_channel.send(embed=embed)
             await asyncio.sleep(self.bot.config['poll_time'])
 
