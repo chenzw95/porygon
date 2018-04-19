@@ -30,7 +30,7 @@ class BuildCog:
                 await ctx.message.add_reaction("✅")
                 embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
                 embed.title = "Build requested"
-                embed.add_field(name="User", value=ctx.message.author.name)
+                embed.add_field(name="User", value=ctx.message.author.mention)
                 if mgdb_commit:
                     embed.add_field(name="Notice", value="This build will download the entire (non-release version) MGDB.")
                 else:
@@ -65,7 +65,7 @@ class BuildCog:
                 await ctx.message.add_reaction("✅")
                 embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
                 embed.title = "Private build requested"
-                embed.add_field(name="User", value=ctx.message.author.name)
+                embed.add_field(name="User", value=ctx.message.author.mention)
                 if mgdb_commit:
                     embed.add_field(name="Notice",
                                     value="This build will download the entire (non-release version) MGDB.")
