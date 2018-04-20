@@ -41,7 +41,6 @@ class Debug:
     def __init__(self, bot):
         self.bot = bot
         self._last_result = None
-        self.redirection_clock_task = bot.loop.create_task(self.redirection_clock())
 
     @commands.command()
     @checks.check_permissions_or_owner(administrator=True)
