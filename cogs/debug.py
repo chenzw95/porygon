@@ -186,7 +186,7 @@ class Debug:
 
             if result:
                 if len(str(result)) > 1950:
-                    await ctx.send("Large output:", file=discord.File(result, filename="output.txt"))
+                    await ctx.send("Large output:", file=discord.File(io.StringIO(result), filename="output.txt"))
                 else:
                     await ctx.send(result)
             else:
