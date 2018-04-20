@@ -32,10 +32,13 @@ class Mod:
             newrole = discord.utils.get(ctx.guild.roles, name="Builders")
         if role.lower() in ["contributor", "contrib", "github"]:
             newrole = discord.utils.get(ctx.guild.roles, name="GitHub Contributors")
-        embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
-        embed.add_field(name="User", value=user.mention)
         if newrole:
             if newrole not in user.roles:
+                embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
+                embed.title = "Role added"
+                embed.add_field(name="Target", value=user.mention)
+                embed.add_field(name="Role", value=newrole.name)
+                embed.add_field(name="Action taken by", value=ctx.author.name)
                 await user.add_roles(newrole)
                 embed.title = "Added {} role".format(newrole.name)
                 await ctx.send("{} : {} role has been added to you!".format(user.mention, newrole.name))
