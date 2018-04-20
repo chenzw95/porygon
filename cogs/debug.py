@@ -165,8 +165,10 @@ class Debug:
                 ret = await func()
         except Exception as e:
             value = stdout.getvalue()
+            await ctx.message.add_reaction("❌")
             await ctx.send('```\n{}{}\n```'.format(value, traceback.format_exc()))
         else:
+            await ctx.message.add_reaction("✅")
             value = stdout.getvalue()
 
             result = None
@@ -184,14 +186,11 @@ class Debug:
 
             if result:
                 if len(str(result)) > 1950:
-                    url = await hastebin(str(result).strip("`"), self.bot.session)
-                    result = self.bot.bot_prefix + 'Large output. Posted to Hastebin: %s' % url
-                    await ctx.send(result)
-
+                    await ctx.send("Large output:", file=discord.File(result, filename="output.txt"))
                 else:
                     await ctx.send(result)
             else:
-                await ctx.send("```\n```")
+                await ctx.send("Command returned no output.")
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @checks.check_permissions_or_owner(administrator=True)
