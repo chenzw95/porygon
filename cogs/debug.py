@@ -1,13 +1,47 @@
-import json
 import logging
 import discord
+import pkg_resources
+import contextlib
+import sys
+import inspect
+import os
+import shutil
+import glob
+import math
+import textwrap
+from discord.ext import commands
+from io import StringIO
+from traceback import format_exc
+from cogs.utils.checks import *
+from contextlib import redirect_stdout
 
 from discord.ext import commands
 from .utils import checks
 
+# Common imports that can be used by the debugger.
+import os
+import requests
+import json
+import gc
+import datetime
+import time
+import traceback
+import prettytable
+import re
+import io
+import asyncio
+import discord
+import random
+import subprocess
+from bs4 import BeautifulSoup
+import urllib
+import psutil
+
 class Debug:
     def __init__(self, bot):
         self.bot = bot
+        self._last_result = None
+        self.redirection_clock_task = bot.loop.create_task(self.redirection_clock())
 
     @commands.command()
     @checks.check_permissions_or_owner(administrator=True)
@@ -100,6 +134,86 @@ class Debug:
             await ctx.send("⚠ This command must be executed in a server!")
         else:
             raise error  # This will print to console (only)
+
+    def cleanup_code(self, content):
+        """Automatically removes code blocks from the code."""
+        # remove ```py\n```
+        if content.startswith('```') and content.endswith('```'):
+            return '\n'.join(content.split('\n')[1:-1])
+
+        # remove `foo`
+        return content.strip('` \n')
+
+    # Executes/evaluates code.Pretty much the same as Rapptz implementation for RoboDanny with slight variations.
+    async def interpreter(self, env, code, ctx):
+        body = self.cleanup_code(code)
+        stdout = io.StringIO()
+
+        os.chdir(os.getcwd())
+        with open('%s/cogs/utils/temp.txt' % os.getcwd(), 'w') as temp:
+            temp.write(body)
+
+        to_compile = 'async def func():\n{}'.format(textwrap.indent(body, "  "))
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            return await ctx.send('```\n{}: {}\n```'.format(e.__class__.__name__, e))
+
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            await ctx.send('```\n{}{}\n```'.format(value, traceback.format_exc()))
+        else:
+            value = stdout.getvalue()
+
+            result = None
+            if ret is None:
+                if value:
+                    result = '```\n{}\n```'.format(value)
+                else:
+                    try:
+                        result = '```\n{}\n```'.format(repr(eval(body, env)))
+                    except:
+                        pass
+            else:
+                self._last_result = ret
+                result = '```\n{}{}\n```'.format(value, ret)
+
+            if result:
+                if len(str(result)) > 1950:
+                    url = await hastebin(str(result).strip("`"), self.bot.session)
+                    result = self.bot.bot_prefix + 'Large output. Posted to Hastebin: %s' % url
+                    await ctx.send(result)
+
+                else:
+                    await ctx.send(result)
+            else:
+                await ctx.send("```\n```")
+
+    @commands.group(pass_context=True, invoke_without_command=True)
+    @checks.check_permissions_or_owner(administrator=True)
+    async def py(self, ctx, *, msg):
+        """Python interpreter. See the wiki for more info."""
+
+        if ctx.invoked_subcommand is None:
+            env = {
+                'bot': self.bot,
+                'ctx': ctx,
+                'channel': ctx.channel,
+                'author': ctx.author,
+                'guild': ctx.guild,
+                'server': ctx.guild,
+                'message': ctx.message,
+                '_': self._last_result
+            }
+
+            env.update(globals())
+
+            await self.interpreter(env, msg, ctx)
 
 
 def setup(bot):
