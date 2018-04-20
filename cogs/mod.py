@@ -16,10 +16,6 @@ class Mod:
         embed.add_field(name="Joined at", value=user.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=user.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         await self.bot.modlog_channel.send(embed=embed)
-        welcome = discord.Embed(color=discord.Color.gold())
-        welcome.title = "Welcome to the PKHeX Auto Legality Mods server, {}!".format(user.name)
-        welcome.description = "Don't forget to read #rules and #announcements. Also if you are interested in the `@BuildUpdates` role, use the !toggleupdates command to get notifications on the latest builds!"
-        await self.bot.general_channel.send(user.mention,embed=welcome)
 
     async def on_member_remove(self, user):
         embed = discord.Embed(color=discord.Color.red())
