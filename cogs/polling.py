@@ -27,24 +27,24 @@ class CommitTracker:
             data = await self.get_latest_commit(owner, repo) 
             try:
                 commitdata = data[0]
+                commit = commitdata['sha']
+                if commit != oldcommit:
+                    self.bot.config['basecommit'] = commit
+                    with open("config.json", 'r+') as conf:
+                        conf.seek(0)
+                        conf.truncate()
+                        json.dump(self.bot.config, conf, indent=4)
+                    embed = discord.Embed(color=7506394)
+                    embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
+                    embed.url = commitdata['html_url']
+                    embed.set_author(name=commitdata['author']['login'], icon_url=commitdata['author']['avatar_url'], url=commitdata['author']['html_url'])
+                    commitmessage = commitdata['commit']['message'].split("\n\n")[0]
+                    if (len(commitmessage) > 50):
+                        commitmessage = commitmessage[:47]+"..."
+                    embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitmessage, commitauthor=commitdata['author']['login'])
+                    await self.bot.basecommits_channel.send(embed=embed)
             except KeyError:
                 logger.error("Repo polling failed: {}".format(data))
-            commit = commitdata['sha']
-            if commit != oldcommit:
-                self.bot.config['basecommit'] = commit
-                with open("config.json", 'r+') as conf:
-                    conf.seek(0)
-                    conf.truncate()
-                    json.dump(self.bot.config, conf, indent=4)
-                embed = discord.Embed(color=7506394)
-                embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
-                embed.url = commitdata['html_url']
-                embed.set_author(name=commitdata['author']['login'], icon_url=commitdata['author']['avatar_url'], url=commitdata['author']['html_url'])
-                commitmessage = commitdata['commit']['message'].split("\n\n")[0]
-                if (len(commitmessage) > 50):
-                    commitmessage = commitmessage[:47]+"..."
-                embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitmessage, commitauthor=commitdata['author']['login'])
-                await self.bot.basecommits_channel.send(embed=embed)
             await asyncio.sleep(self.bot.config['poll_time'])
 
 
