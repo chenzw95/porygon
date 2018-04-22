@@ -8,6 +8,7 @@ from .utils import checks
 class Mod:
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger("porygon.{}".format(__name__))
 
     async def on_member_join(self, user):
         embed = discord.Embed(color=discord.Color.green())
@@ -113,7 +114,4 @@ class Mod:
 
 
 def setup(bot):
-    global logger
-    logger = logging.getLogger("cog-mod")
-    logger.setLevel(logging.INFO)
     bot.add_cog(Mod(bot))

@@ -37,16 +37,18 @@ from bs4 import BeautifulSoup
 import urllib
 import psutil
 
+
 class Debug:
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger("porygon.{}".format(__name__))
         self._last_result = None
 
     @commands.command()
     @checks.check_permissions_or_owner(administrator=True)
     async def rehash(self, ctx):
         """Reloads bot configuration."""
-        logger.info("Reloading configuration...")
+        self.logger.info("Reloading configuration...")
         try:
             with open("config.json") as c:
                 config = json.load(c)
@@ -54,7 +56,7 @@ class Debug:
                 setattr(self.bot, "{}_channel".format(channel), self.bot.main_server.get_channel(cid))
         except Exception as e:
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
-            logger.exception(e)
+            self.logger.exception(e)
         await ctx.send("✅ Configuration reloaded.")
 
     @commands.command()
@@ -68,7 +70,7 @@ class Debug:
             await ctx.send("✅ Extension reloaded.")
         except Exception as e:
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
-            logger.exception(e)
+            self.logger.exception(e)
 
     @commands.command()
     @checks.check_permissions_or_owner(administrator=True)
@@ -80,7 +82,7 @@ class Debug:
             await ctx.send("✅ Extension loaded.")
         except Exception as e:
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
-            logger.exception(e)
+            self.logger.exception(e)
 
     @commands.command()
     @checks.check_permissions_or_owner(administrator=True)
@@ -94,7 +96,7 @@ class Debug:
             await ctx.send("✅ Extension unloaded.")
         except Exception as e:
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
-            logger.exception(e)
+            self.logger.exception(e)
 
     @commands.command(aliases=['ri'])
     @commands.guild_only()
@@ -215,7 +217,4 @@ class Debug:
 
 
 def setup(bot):
-    global logger
-    logger = logging.getLogger("cog-debug")
-    logger.setLevel(logging.INFO)
     bot.add_cog(Debug(bot))

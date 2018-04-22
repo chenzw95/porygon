@@ -8,6 +8,7 @@ import discord
 class CommitTracker:
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.polling_task = bot.loop.create_task(self.trackCommits())
 
     def __unload(self):
@@ -44,12 +45,11 @@ class CommitTracker:
                     embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitmessage, commitauthor=commitdata['author']['login'])
                     await self.bot.basecommits_channel.send(embed=embed)
             except KeyError:
-                logger.error("Repo polling failed: {}".format(data))
+                self.logger.error("Repo polling failed: {}".format(data))
+            except Exception as e:
+                self.logger.exception("Something went wrong:")
             await asyncio.sleep(self.bot.config['poll_time'])
 
 
 def setup(bot):
-    global logger
-    logger = logging.getLogger("cog-polling")
-    logger.setLevel(logging.INFO)
     bot.add_cog(CommitTracker(bot))

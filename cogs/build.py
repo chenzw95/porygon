@@ -8,6 +8,7 @@ from discord.ext import commands
 class BuildCog:
     def __init__(self, bot):
         self.bot = bot
+        self.logger = logging.getLogger("porygon.{}".format(__name__))
 
     @commands.command()
     @commands.guild_only()
@@ -38,7 +39,7 @@ class BuildCog:
                 await self.bot.builds_channel.send(embed=embed)
             else:
                 response = await resp.text()
-                logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
+                self.logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
                 await ctx.send("⚠️ Request failed. Details have been logged to console.")
 
     @commands.command()
@@ -75,7 +76,7 @@ class BuildCog:
                 await self.bot.builds_channel.send(embed=embed)
             else:
                 response = await resp.text()
-                logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
+                self.logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
                 await ctx.send("⚠️ Request failed. Details have been logged to console.")
         check = lambda m: m.channel == self.bot.builds_channel and m.author.name == "BuildBot" and m.author.discriminator == "0000"
         try:
@@ -115,7 +116,4 @@ class BuildCog:
 
 
 def setup(bot):
-    global logger
-    logger = logging.getLogger("cog-build")
-    logger.setLevel(logging.INFO)
     bot.add_cog(BuildCog(bot))
