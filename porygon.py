@@ -80,6 +80,8 @@ if __name__ == "__main__":
             await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
         elif isinstance(error, discord.ext.commands.MissingRequiredArgument):
             await ctx.send("{} You are missing required arguments.".format(ctx.message.author.mention))
+        elif isinstance(error, commands.BotMissingPermissions):
+            await ctx.send("⚠ I don't have the permissions to do this.")
         else:
             if ctx.command:
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
@@ -91,6 +93,8 @@ if __name__ == "__main__":
         bot.main_server = discord.utils.get(bot.guilds, id=401014193211441153)
         for channel, cid in config['channels'].items():
             setattr(bot, "{}_channel".format(channel), bot.main_server.get_channel(cid))
+        for role, roleid in config['roles'].items():
+            setattr(bot, "{}_role".format(role), discord.utils.get(bot.main_server.roles, id=roleid))
         bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": "Porygon"})
 
     for extension in os.listdir("cogs"):
