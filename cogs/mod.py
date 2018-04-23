@@ -48,7 +48,7 @@ class Mod:
         if restrictions_db.get(mid):
             re_add = []
             for restriction, expiry in restrictions_db[mid].items():
-                if expiry == 0 or expiry < time.time():
+                if expiry == 0 or expiry > time.time():
                     re_add.append(getattr(self.bot, "{}_role".format(restriction), None))
             await member.add_roles(*re_add)
             embed.add_field(name="⚠ Restrictions re-applied", value=", ".join([x.name for x in re_add]), inline=False)
