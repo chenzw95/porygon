@@ -55,8 +55,8 @@ class Mod:
         await self.bot.modlog_channel.send(embed=embed)
 
     async def on_member_remove(self, member):
-        embed = discord.Embed(color=discord.Color.red())
-        embed.title = "Member left"
+        embed = discord.Embed(color=discord.Color.red(), timestamp=datetime.utcnow())
+        embed.title = "🚪 Member left"
         embed.add_field(name="User", value=member.mention)
         await self.bot.modlog_channel.send(embed=embed)
 
@@ -92,7 +92,7 @@ class Mod:
         """Kicks a member."""
         author = ctx.message.author
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
-        embed.title = "Kicked user"
+        embed.title = "👢 Kicked member"
         embed.add_field(name="User", value=member.mention)
         embed.add_field(name="Action taken by", value=ctx.author.name)
         if member:
@@ -114,7 +114,7 @@ class Mod:
         """Bans a member."""
         author = ctx.message.author
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
-        embed.title = "Banned user"
+        embed.title = "<:banhammer:437900519822852096> Banned member"
         embed.add_field(name="User", value=member.mention)
         embed.add_field(name="Action taken by", value=ctx.author.name)
         if member:
@@ -137,15 +137,17 @@ class Mod:
         if ctx.author.top_role.position < member.top_role.position + 1:
             return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
         self.add_restriction(member, "mute")
-        await member.add_roles(self.bot.muted_role, reason=reason)
+        await member.add_roles(self.bot.mute_role, reason=reason)
         await ctx.send("{} has now been muted.".format(member.mention))
-        msg = "🤐 **Muted**: {} by {} ({})".format(member.mention, ctx.author.mention, member.id)
-        msg += "\nDuration: Indefinite"
-        if reason:
-            msg += "\nReason: {}".format(reason)
-        else:
-            msg += "\nReason: *no reason specified*"
-        await self.bot.modlog_channel.send(msg)
+        embed = discord.Embed(color=discord.Color.orange(), timestamp=ctx.message.created_at)
+        embed.title = "🤐 Muted member"
+        embed.add_field(name="Member", value=member.mention).add_field(name="Member ID", value=member.id)
+        embed.add_field(name="Action taken by", value=ctx.author.name)
+        embed.add_field(name="Duration", value="Indefinite")
+        if not reason:
+            reason = "*no reason specified*"
+        embed.add_field(name="Reason", value=reason)
+        await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
     @checks.check_permissions_or_owner(manage_roles=True)
@@ -153,10 +155,13 @@ class Mod:
     async def unmute(self, ctx, member: discord.Member):
         """Unmutes a member."""
         self.remove_restriction(member, "mute")
-        await member.remove_roles(self.bot.muted_role)
+        await member.remove_roles(self.bot.mute_role)
         await ctx.send("{} can now speak again.".format(member.mention))
-        msg = "🔉 **Unmute**: {} by {} ({})".format(member.mention, ctx.author.mention, member.id)
-        await self.bot.modlog_channel.send(msg)
+        embed = discord.Embed(color=discord.Color.dark_green(), timestamp=ctx.message.created_at)
+        embed.title = "🔉 Unmuted member"
+        embed.add_field(name="Member", value=member.mention).add_field(name="Member ID", value=member.id)
+        embed.add_field(name="Action taken by", value=ctx.author.name)
+        await self.bot.modlog_channel.send(embed=embed)
 
     @kick.error
     @ban.error
