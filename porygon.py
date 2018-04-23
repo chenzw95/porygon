@@ -55,9 +55,7 @@ if __name__ == "__main__":
         logger.info("Restarting on {}'s request...".format(ctx.author.name))
         await ctx.send("Restarting...")
         await bot.logout()
-        await bot.session.close()
-        logger.shutdown()
-        sys.exit(1)
+        os._exit(1)
 
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
@@ -65,9 +63,7 @@ if __name__ == "__main__":
         logger.info("Terminating on {}'s request...".format(ctx.author.name))
         await ctx.send("Shutting down...")
         await bot.logout()
-        await bot.session.close()
-        logger.shutdown()
-        sys.exit(0)
+        os._exit(0)
 
     @bot.event
     async def on_command_error(ctx, error):
