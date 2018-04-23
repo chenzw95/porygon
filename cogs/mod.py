@@ -25,7 +25,7 @@ class Mod:
 
     async def check_expiry(self):
         await self.bot.wait_until_ready()
-        while not self.bot.is_closed:
+        while not self.bot.is_closed():
             try:
                 restrictions = copy.copy(self.bot.restrictions_db)
                 expired = False
