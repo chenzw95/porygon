@@ -20,7 +20,7 @@ class CommitTracker:
             return await response.json()
 
     async def trackCommits(self):
-        await self.bot.wait_until_ready()
+        await self.bot.wait_for_setup()
         while not self.bot.is_closed():
             oldcommit = self.bot.config['basecommit']
             owner = 'kwsch'

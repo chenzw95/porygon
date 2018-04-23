@@ -47,7 +47,11 @@ if __name__ == "__main__":
                        description='Porygon',
                        max_messages=100)
     bot.config = config
+    bot.is_setup = asyncio.Event(loop=bot.loop)
 
+    async def wait_for_setup():
+        await bot.is_setup.wait()
+    bot.wait_for_setup = wait_for_setup
 
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
@@ -85,13 +89,14 @@ if __name__ == "__main__":
 
     @bot.event
     async def on_ready():
-        logger.info("Connected as UID {}.".format(bot.user.id))
         bot.main_server = discord.utils.get(bot.guilds, id=401014193211441153)
         for channel, cid in config['channels'].items():
             setattr(bot, "{}_channel".format(channel), bot.main_server.get_channel(cid))
         for role, roleid in config['roles'].items():
             setattr(bot, "{}_role".format(role), discord.utils.get(bot.main_server.roles, id=roleid))
         bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": "Porygon"})
+        logger.info("Connected as UID {}.".format(bot.user.id))
+        bot.is_setup.set()
 
     for extension in os.listdir("cogs"):
         if extension.endswith('.py'):

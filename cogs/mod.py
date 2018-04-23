@@ -24,7 +24,7 @@ class Mod:
         self.expiry_task.cancel()
 
     async def check_expiry(self):
-        await self.bot.wait_until_ready()
+        await self.bot.wait_for_setup()
         while not self.bot.is_closed():
             try:
                 restrictions = copy.deepcopy(self.bot.restrictions_db)
