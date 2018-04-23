@@ -54,6 +54,8 @@ class Debug:
                 config = json.load(c)
             for channel, cid in config['channels'].items():
                 setattr(self.bot, "{}_channel".format(channel), self.bot.main_server.get_channel(cid))
+            for role, roleid in config['roles'].items():
+                setattr(self.bot, "{}_role".format(role), discord.utils.get(self.bot.main_server.roles, id=roleid))
         except Exception as e:
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
             self.logger.exception(e)
