@@ -1,5 +1,7 @@
 import json
 import logging
+import time
+from datetime import datetime
 
 import discord
 from discord.ext import commands
@@ -36,10 +38,20 @@ class Mod:
 
     async def on_member_join(self, member):
         embed = discord.Embed(color=discord.Color.green())
-        embed.title = "New member"
+        embed.title = "🆕 New member"
         embed.add_field(name="User", value=member.mention)
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
+        mid = str(member.id)
+        with open("restrictions.json", "r") as f:
+            restrictions_db = json.load(f)
+        if restrictions_db.get(mid):
+            re_add = []
+            for restriction, expiry in restrictions_db[mid].items():
+                if expiry == 0 or expiry < time.time():
+                    re_add.append(getattr(self.bot, "{}_role".format(restriction), None))
+            await member.add_roles(*re_add)
+            embed.add_field(name="⚠ Restrictions re-applied", value=", ".join([x.name for x in re_add]), inline=False)
         await self.bot.modlog_channel.send(embed=embed)
 
     async def on_member_remove(self, member):
