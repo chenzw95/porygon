@@ -31,9 +31,7 @@ class CommitTracker:
                 commit = commitdata['sha']
                 if commit != oldcommit:
                     self.bot.config['basecommit'] = commit
-                    with open("config.json", 'r+') as conf:
-                        conf.seek(0)
-                        conf.truncate()
+                    with open("config.json", 'w') as conf:
                         json.dump(self.bot.config, conf, indent=4)
                     embed = discord.Embed(color=7506394)
                     embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
