@@ -27,7 +27,7 @@ class Mod:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
             try:
-                restrictions = copy.copy(self.bot.restrictions_db)
+                restrictions = copy.deepcopy(self.bot.restrictions_db)
                 expired = False
                 for user, entry in restrictions.items():
                     for restriction, expiry in entry.items():
