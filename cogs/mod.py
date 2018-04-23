@@ -1,5 +1,8 @@
+import asyncio
+import copy
 import json
 import logging
+import re
 import time
 from datetime import datetime
 
@@ -13,28 +16,51 @@ class Mod:
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
+        with open("restrictions.json", "r") as f:
+            self.bot.restrictions_db = json.load(f)
+        self.expiry_task = bot.loop.create_task(self.check_expiry())
+
+    def __unload(self):
+        self.expiry_task.cancel()
+
+    async def check_expiry(self):
+        await self.bot.wait_until_ready()
+        while not self.bot.is_closed:
+            try:
+                restrictions = copy.copy(self.bot.restrictions_db)
+                expired = False
+                for user, entry in restrictions.items():
+                    for restriction, expiry in entry.items():
+                        if expiry <= time.time():
+                            expired = True
+                            self.bot.restrictions_db[user].pop(restriction, None)
+                            member = self.bot.main_server.get_member(int(user))
+                            await member.remove_roles(getattr(self.bot, "{}_role".format(restriction), None))
+                if expired:
+                    with open("restrictions.json", "w") as f:
+                        json.dump(self.bot.restrictions_db, f, indent=4)
+            except Exception as e:
+                self.logger.exception("Something went wrong:")
+            finally:
+                await asyncio.sleep(1)
 
     def add_restriction(self, member, type, expiry=0):
         mid = str(member.id)
-        with open("restrictions.json", "r") as f:
-            restrictions_db = json.load(f)
-        if not restrictions_db.get(mid):
-            restrictions_db[mid] = {}
-        if not restrictions_db[mid].get(type):
-            restrictions_db[mid][type] = expiry
+        if not self.bot.restrictions_db.get(mid):
+            self.bot.restrictions_db[mid] = {}
+        if not self.bot.restrictions_db[mid].get(type):
+            self.bot.restrictions_db[mid][type] = expiry
         with open("restrictions.json", "w") as f:
-            json.dump(restrictions_db, f, indent=4)
+            json.dump(self.bot.restrictions_db, f, indent=4)
 
     def remove_restriction(self, member, type):
         mid = str(member.id)
-        with open("restrictions.json", "r") as f:
-            restrictions_db = json.load(f)
-        if not restrictions_db.get(mid):
+        if not self.bot.restrictions_db.get(mid):
             # This should not be happening
-            restrictions_db[mid] = {}
-        restrictions_db[mid].pop(type, None)
+            self.bot.restrictions_db[mid] = {}
+        self.bot.restrictions_db[mid].pop(type, None)
         with open("restrictions.json", "w") as f:
-            json.dump(restrictions_db, f, indent=4)
+            json.dump(self.bot.restrictions_db, f, indent=4)
 
     async def on_member_join(self, member):
         embed = discord.Embed(color=discord.Color.green())
@@ -149,6 +175,46 @@ class Mod:
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
+    @commands.command(aliases=['tmute', 'timemute'])
+    @checks.check_permissions_or_owner(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def timedmute(self, ctx, member: discord.Member, duration, reason: str = None):
+        """Mutes a member temporarily."""
+        if ctx.author.top_role.position < member.top_role.position + 1:
+            return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
+        timeunits = {
+            "s": ["second", 1],
+            "m": ["minute", 60],
+            "h": ["hour", 3600],
+            "d": ["day", 86400]
+        }
+        bantime = 0
+        duration_text = ""
+        matches = re.findall("([0-9]+[smhd])", duration)
+        if not matches:
+            return await ctx.send("⚠ Invalid duration.")
+        for match in matches:
+            bantime += int(match[:-1]) * timeunits[match[-1]][1]
+            duration_text += "{} {}".format(match[:-1], timeunits[match[-1]][0])
+            if int(match[:-1]) > 1:
+                duration_text += "s"
+            duration_text += " "
+        duration_text = duration_text.rstrip()
+        expiry = time.time() + bantime
+        self.add_restriction(member, "mute", expiry)
+        await member.add_roles(self.bot.mute_role, reason=reason)
+        await ctx.send("{} has now been muted.".format(member.mention))
+        embed = discord.Embed(color=discord.Color.orange(), timestamp=ctx.message.created_at)
+        embed.title = "🤐 Muted member"
+        embed.add_field(name="Member", value=member.mention).add_field(name="Member ID", value=member.id)
+        embed.add_field(name="Action taken by", value=ctx.author.name)
+        embed.add_field(name="Duration", value=duration_text)
+        embed.add_field(name="Expiry", value="{:%A, %d. %B %Y @ %H:%M:%S}".format(datetime.utcfromtimestamp(expiry)))
+        if not reason:
+            reason = "*no reason specified*"
+        embed.add_field(name="Reason", value=reason)
+        await self.bot.modlog_channel.send(embed=embed)
+
     @commands.command()
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
@@ -165,10 +231,13 @@ class Mod:
 
     @kick.error
     @ban.error
-    async def kick_handler(self, ctx, error):
+    @mute.error
+    @timedmute.error
+    @unmute.error
+    async def mod_action_handler(self, ctx, error):
         error = getattr(error, 'original', error)
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Member could not be found.")
+            await ctx.send("❌ Member could not be found.")
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send("⚠ I don't have the permissions to do this.")
         elif isinstance(error, commands.CheckFailure):
