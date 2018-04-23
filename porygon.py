@@ -41,7 +41,7 @@ if __name__ == "__main__":
         with open("config.json") as c:
             config = json.load(c)
     except FileNotFoundError:
-        logger.error("Config file not found, quitting!")
+        logger.critical("Config file not found, quitting!")
         sys.exit(-1)
     bot = commands.Bot(command_prefix=config['prefix'],
                        description='Porygon',
@@ -52,16 +52,22 @@ if __name__ == "__main__":
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
     async def restart(ctx):
+        logger.info("Restarting on {}'s request...".format(ctx.author.name))
         await ctx.send("Restarting...")
         await bot.logout()
-        os._exit(1)
+        await bot.session.close()
+        logger.shutdown()
+        sys.exit(1)
 
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
     async def shutdown(ctx):
+        logger.info("Terminating on {}'s request...".format(ctx.author.name))
         await ctx.send("Shutting down...")
         await bot.logout()
-        os._exit(0)
+        await bot.session.close()
+        logger.shutdown()
+        sys.exit(0)
 
     @bot.event
     async def on_command_error(ctx, error):
