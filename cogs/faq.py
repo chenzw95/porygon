@@ -1,0 +1,108 @@
+import asyncio
+import json
+import logging
+
+import discord
+from discord.ext import commands
+
+from .utils import checks
+
+
+class Faq:
+    def __init__(self, bot):
+        self.bot = bot
+        self.logger = logging.getLogger("porygon.{}".format(__name__))
+
+    async def update_faq(self):
+        with open("faq.json", "r") as f:
+            faq_db = json.load(f)
+        messages = []
+        combined = []
+        for id, entry in enumerate(faq_db, start=1):
+            combined.append("❔ Q{}. __{}__\n{}".format(id, entry[0], entry[1]))
+            if len("\n\n".join(combined)) > 2000:
+                combined.pop()
+                messages.append("\n\n".join(combined[:]))
+                combined.clear()
+                combined.append("❔ Q{}. __{}__\n{}".format(id, entry[0], entry[1]))
+            if len(faq_db) <= id:
+                messages.append("\n\n".join(combined[:]))
+        counter = 0
+        predicate = lambda m: m.author == self.bot.user
+        async for message in self.bot.faq_channel.history(limit=100, reverse=True).filter(predicate):
+            if counter < len(messages):
+                await message.edit(content=messages[counter])
+                counter += 1
+            else:
+                await message.delete()
+        for message in messages[counter:]:
+            await self.bot.faq_channel.send(message)
+
+    @commands.group(invoke_without_command=True)
+    async def faq(self, ctx):
+        pass
+
+    @faq.command()
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    async def add(self, ctx):
+        await ctx.send("Type the question to be added after this message:\n(note: all questions are automatically underlined)")
+        check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
+        try:
+            question = await self.bot.wait_for("message", check=check, timeout=30.0)
+            await ctx.send("Type the answer after this message:")
+            answer = await self.bot.wait_for("message", check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            return await ctx.send("🚫 Timed out while waiting for a response, aborting.")
+        if len("❔ QX. __{}__\n{}".format(question.clean_content, answer.clean_content)) > 1950:
+            return await ctx.send("⚠ This FAQ entry is too long.")
+        with open("faq.json", "r") as f:
+            faq_db = json.load(f)
+        faq_db.append([question.clean_content, answer.clean_content])
+        with open("faq.json", "w") as f:
+            json.dump(faq_db, f, indent=4)
+        await ctx.send("✅ Entry added.")
+        self.bot.loop.create_task(self.update_faq())
+
+    @faq.command(aliases=['del'])
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    async def delete(self, ctx, faq_id: int = 0):
+        if faq_id == 0:
+            return await ctx.send("⚠ FAQ entry ID is required.")
+        with open("faq.json", "r") as f:
+            faq_db = json.load(f)
+        try:
+            faq_db.pop(faq_id-1)
+        except IndexError:
+            return await ctx.send("⚠ No such entry exists.")
+        with open("faq.json", "w") as f:
+            json.dump(faq_db, f, indent=4)
+        await ctx.send("✅ Entry deleted.")
+        self.bot.loop.create_task(self.update_faq())
+
+    @faq.command(aliases=['source'])
+    async def raw(self, ctx, faq_id: int = 0, return_type: str = "both"):
+        if faq_id == 0:
+            return await ctx.send("⚠ FAQ entry ID is required.")
+        if not(return_type[0] == "q" or return_type[0] == "a" or return_type[0] == "b"):
+            return await ctx.send("⚠ Unknown return type. Acceptable arguments are: `question`, `answer`, `both` (default).")
+        with open("faq.json", "r") as f:
+            faq_db = json.load(f)
+        try:
+            entry = faq_db[faq_id-1]
+        except IndexError:
+            return await ctx.send("⚠ No such entry exists.")
+        if return_type[0] == "q":
+            msg = entry[0]
+        elif return_type[0] == "a":
+            msg = entry[1]
+        else:
+            msg = "\n\n".join(entry)
+        await ctx.send("```\n{}\n```".format(msg))
+
+    @faq.command()
+    async def refresh(self, ctx):
+        self.bot.loop.create_task(self.update_faq())
+
+
+def setup(bot):
+    bot.add_cog(Faq(bot))
