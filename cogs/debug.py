@@ -102,7 +102,7 @@ class Debug:
 
     @commands.command(aliases=['ri'])
     @commands.guild_only()
-    async def roleinfo(self, ctx, role: discord.Role):
+    async def roleinfo(self, ctx, *, role: discord.Role):
         embed = discord.Embed(title="Role information", color=role.color, timestamp=ctx.message.created_at)
         embed.add_field(name="Name", value=role.name).add_field(name="ID", value=role.id)
         embed.add_field(name="Hoisted", value=role.hoist, inline=False).add_field(name="Mentionable", value=role.mentionable)
@@ -110,7 +110,7 @@ class Debug:
 
     @commands.command(aliases=['ui'])
     @commands.guild_only()
-    async def userinfo(self, ctx, raw_member=None):
+    async def userinfo(self, ctx, *, raw_member=None):
         if not raw_member:
             member = ctx.author
         else:
