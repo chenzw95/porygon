@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import random
 
 import discord
 from discord.ext import commands
@@ -45,12 +46,18 @@ class Faq:
     @faq.command()
     @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
     async def add(self, ctx):
-        await ctx.send("Type the question to be added after this message:\n(note: all questions are automatically underlined)")
+        random_num = random.randint(1, 9999)
+        await ctx.send("Type the question to be added after this message:\n(note: all questions are automatically underlined)\n\nType `abort-{:04d}` to abort.".format(random_num))
         check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
         try:
             question = await self.bot.wait_for("message", check=check, timeout=30.0)
-            await ctx.send("Type the answer after this message:")
+            if question.content == "abort-{:04d}".format(random_num):
+                return await ctx.send("❌ Canceled by user.")
+            random_num = random.randint(1, 9999)
+            await ctx.send("Type the answer after this message:\n\nType `abort-{:04d}` to abort.".format(random_num))
             answer = await self.bot.wait_for("message", check=check, timeout=30.0)
+            if answer.content == "abort-{:04d}".format(random_num):
+                return await ctx.send("❌ Canceled by user.")
         except asyncio.TimeoutError:
             return await ctx.send("🚫 Timed out while waiting for a response, aborting.")
         if len("❔ QX. __{}__\n{}".format(question.clean_content, answer.clean_content)) > 1950:
@@ -77,6 +84,34 @@ class Faq:
         with open("faq.json", "w") as f:
             json.dump(faq_db, f, indent=4)
         await ctx.send("✅ Entry deleted.")
+        self.bot.loop.create_task(self.update_faq())
+
+    @faq.command(aliases=['modify'])
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    async def edit(self, ctx, faq_id: int = 0, edit_type: str = "a"):
+        if faq_id == 0:
+            return await ctx.send("⚠ FAQ entry ID is required.")
+        if not(edit_type[0] == "q" or edit_type[0] == "a"):
+            return await ctx.send("⚠ Unknown return type. Acceptable arguments are: `question`, `answer` (default).")
+        with open("faq.json", "r") as f:
+            faq_db = json.load(f)
+        try:
+            faq_db[faq_id-1]
+        except IndexError:
+            return await ctx.send("⚠ No such entry exists.")
+        random_num = random.randint(1, 9999)
+        check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
+        await ctx.send("Enter the new content:\n\nType `abort-{:04d}` to abort.".format(random_num))
+        new_content = await self.bot.wait_for("message", check=check, timeout=30.0)
+        if new_content.content == "abort-{:04d}".format(random_num):
+            return await ctx.send("❌ Canceled by user.")
+        if edit_type[0] == "q":
+            faq_db[faq_id - 1][0] = new_content.clean_content
+        elif edit_type[0] == "a":
+            faq_db[faq_id - 1][1] = new_content.clean_content
+        with open("faq.json", "w") as f:
+            json.dump(faq_db, f, indent=4)
+        await ctx.send("✅ Entry modified.")
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command(aliases=['source'])
