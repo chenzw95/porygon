@@ -7,6 +7,7 @@ import sys
 
 import aiohttp
 import discord
+from aiomysql.sa import create_engine
 from discord.ext import commands
 
 from cogs.utils import checks
@@ -53,20 +54,31 @@ if __name__ == "__main__":
         await bot.is_setup.wait()
     bot.wait_for_setup = wait_for_setup
 
+    async def connect_db():
+        bot.engine = await create_engine(host=config['database']['host'], user=config['database']['user'],
+                                         password=config['database']['password'], db=config['database']['dbname'],
+                                         loop=bot.loop)
+
+    bot.loop.create_task(connect_db())
+
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
     async def restart(ctx):
         logger.info("Restarting on {}'s request...".format(ctx.author.name))
+        bot.engine.close()
         await ctx.send("Restarting...")
         await bot.logout()
+        await bot.engine.wait_closed()
         os._exit(1)
 
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
     async def shutdown(ctx):
         logger.info("Terminating on {}'s request...".format(ctx.author.name))
+        bot.engine.close()
         await ctx.send("Shutting down...")
         await bot.logout()
+        await bot.engine.wait_closed()
         os._exit(0)
 
     @bot.event
