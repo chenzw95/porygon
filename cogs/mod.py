@@ -32,7 +32,7 @@ class Mod:
             try:
                 async with self.bot.engine.acquire() as conn:
                     now_datetime = datetime.utcnow()
-                    query = restrictions_tbl.select().where(restrictions_tbl.c.expiry < now_datetime).order_by(
+                    query = restrictions_tbl.select().where(restrictions_tbl.c.expiry <= now_datetime).order_by(
                         restrictions_tbl.c.expiry.desc(), restrictions_tbl.c.user.desc()
                     )
                     async for row in conn.execute(query):
