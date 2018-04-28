@@ -65,8 +65,8 @@ class Mod:
     async def on_member_join(self, member):
         embed = discord.Embed(color=discord.Color.green())
         embed.title = "🆕 New member"
-        embed.add_field(name="User", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
         embed.add_field(name="Mention", value=member.mention)
+        embed.add_field(name="User", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         async with self.bot.engine.acquire() as conn:
@@ -81,8 +81,8 @@ class Mod:
     async def on_member_remove(self, member):
         embed = discord.Embed(color=discord.Color.red(), timestamp=datetime.utcnow())
         embed.title = "🚪 Member left"
-        embed.add_field(name="User", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
         embed.add_field(name="Mention", value=member.mention)
+        embed.add_field(name="User", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
         await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command(name='promote', aliases=['addrole'])
