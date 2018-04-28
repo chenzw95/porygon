@@ -7,7 +7,7 @@ def check_permissions_or_owner(**perms):
         msg = ctx.message
         with open("config.json") as c:
             config = json.load(c)
-        if str(msg.author.id) == config['owner']:
+        if msg.author.id == config['owner']:
             return True
         ch = msg.channel
         permissions = ch.permissions_for(msg.author)
