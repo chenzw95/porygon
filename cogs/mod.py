@@ -69,14 +69,11 @@ class Mod:
         embed.add_field(name="Mention", value=member.mention)
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
-        mid = str(member.id)
-        with open("restrictions.json", "r") as f:
-            restrictions_db = json.load(f)
-        if restrictions_db.get(mid):
+        async with self.bot.engine.acquire() as conn:
+            query = restrictions_tbl.select().where(restrictions_tbl.c.expiry > datetime.utcnow())
             re_add = []
-            for restriction, expiry in restrictions_db[mid].items():
-                if expiry == 0 or expiry > time.time():
-                    re_add.append(getattr(self.bot, "{}_role".format(restriction), None))
+            async for row in conn.execute(query):
+                re_add.append(getattr(self.bot, "{}_role".format(row.type), None))
             await member.add_roles(*re_add)
             embed.add_field(name="⚠ Restrictions re-applied", value=", ".join([x.name for x in re_add]), inline=False)
         await self.bot.modlog_channel.send(embed=embed)
