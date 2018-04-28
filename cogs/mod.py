@@ -4,12 +4,15 @@ import json
 import logging
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
+from sqlalchemy.dialects.mysql import insert
+from sqlalchemy import null
 
 from .utils import checks
+from database import restrictions_tbl
 
 
 class Mod:
@@ -27,40 +30,37 @@ class Mod:
         await self.bot.wait_for_setup()
         while not self.bot.is_closed():
             try:
-                restrictions = copy.deepcopy(self.bot.restrictions_db)
-                expired = False
-                for user, entry in restrictions.items():
-                    for restriction, expiry in entry.items():
-                        if expiry <= time.time():
-                            expired = True
-                            self.bot.restrictions_db[user].pop(restriction, None)
-                            member = self.bot.main_server.get_member(int(user))
-                            await member.remove_roles(getattr(self.bot, "{}_role".format(restriction), None))
-                if expired:
-                    with open("restrictions.json", "w") as f:
-                        json.dump(self.bot.restrictions_db, f, indent=4)
+                async with self.bot.engine.acquire() as conn:
+                    now_datetime = datetime.utcnow()
+                    query = restrictions_tbl.select().where(restrictions_tbl.c.expiry <= now_datetime).order_by(
+                        restrictions_tbl.c.expiry.desc(), restrictions_tbl.c.user.desc()
+                    )
+                    async for row in conn.execute(query):
+                        member = self.bot.main_server.get_member(row.user)
+                        embed = discord.Embed(color=discord.Color.dark_orange(), timestamp=now_datetime)
+                        embed.title = "🕛 Restriction expired"
+                        if member is not None:
+                            embed.add_field(name="Member", value=member.mention)
+                        embed.add_field(name="Member ID", value=row.user)
+                        embed.add_field(name="Role", value=getattr(self.bot, "{}_role".format(row.type), None).name)
+                        await self.bot.modlog_channel.send(embed=embed)
+                        delete_stmt = restrictions_tbl.delete().where(restrictions_tbl.c.id == row.id)
+                        await conn.execute(delete_stmt)
             except Exception as e:
                 self.logger.exception("Something went wrong:")
             finally:
                 await asyncio.sleep(1)
 
-    def add_restriction(self, member, type, expiry=0):
-        mid = str(member.id)
-        if not self.bot.restrictions_db.get(mid):
-            self.bot.restrictions_db[mid] = {}
-        if not self.bot.restrictions_db[mid].get(type):
-            self.bot.restrictions_db[mid][type] = expiry
-        with open("restrictions.json", "w") as f:
-            json.dump(self.bot.restrictions_db, f, indent=4)
+    async def add_restriction(self, member, r_type, expiry=null()):
+        async with self.bot.engine.acquire() as conn:
+            insert_stmt = insert(restrictions_tbl).values(user=member.id, type=r_type, expiry=expiry)
+            on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(expiry=expiry)
+            await conn.execute(on_duplicate_key_stmt)
 
-    def remove_restriction(self, member, type):
-        mid = str(member.id)
-        if not self.bot.restrictions_db.get(mid):
-            # This should not be happening
-            self.bot.restrictions_db[mid] = {}
-        self.bot.restrictions_db[mid].pop(type, None)
-        with open("restrictions.json", "w") as f:
-            json.dump(self.bot.restrictions_db, f, indent=4)
+    async def remove_restriction(self, member, r_type):
+        async with self.bot.engine.acquire() as conn:
+            delete_stmt = restrictions_tbl.delete().where((restrictions_tbl.c.user == member.id) & (restrictions_tbl.c.type == r_type))
+            await conn.execute(delete_stmt)
 
     async def on_member_join(self, member):
         embed = discord.Embed(color=discord.Color.green())
@@ -69,14 +69,11 @@ class Mod:
         embed.add_field(name="Mention", value=member.mention)
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
-        mid = str(member.id)
-        with open("restrictions.json", "r") as f:
-            restrictions_db = json.load(f)
-        if restrictions_db.get(mid):
+        async with self.bot.engine.acquire() as conn:
+            query = restrictions_tbl.select().where(restrictions_tbl.c.expiry > datetime.utcnow())
             re_add = []
-            for restriction, expiry in restrictions_db[mid].items():
-                if expiry == 0 or expiry > time.time():
-                    re_add.append(getattr(self.bot, "{}_role".format(restriction), None))
+            async for row in conn.execute(query):
+                re_add.append(getattr(self.bot, "{}_role".format(row.type), None))
             await member.add_roles(*re_add)
             embed.add_field(name="⚠ Restrictions re-applied", value=", ".join([x.name for x in re_add]), inline=False)
         await self.bot.modlog_channel.send(embed=embed)
@@ -164,7 +161,7 @@ class Mod:
         """Mutes a member permanently."""
         if ctx.author.top_role.position < member.top_role.position + 1:
             return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
-        self.add_restriction(member, "mute")
+        await self.add_restriction(member, "mute")
         await member.add_roles(self.bot.mute_role, reason=reason)
         await ctx.send("{} has now been muted.".format(member.mention))
         embed = discord.Embed(color=discord.Color.orange(), timestamp=ctx.message.created_at)
@@ -202,8 +199,8 @@ class Mod:
                 duration_text += "s"
             duration_text += " "
         duration_text = duration_text.rstrip()
-        expiry = time.time() + bantime
-        self.add_restriction(member, "mute", expiry)
+        expiry = datetime.utcnow() + timedelta(seconds=bantime)
+        await self.add_restriction(member, "mute", expiry)
         await member.add_roles(self.bot.mute_role, reason=reason)
         await ctx.send("{} has now been muted.".format(member.mention))
         embed = discord.Embed(color=discord.Color.orange(), timestamp=ctx.message.created_at)
@@ -211,7 +208,7 @@ class Mod:
         embed.add_field(name="Member", value=member.mention).add_field(name="Member ID", value=member.id)
         embed.add_field(name="Action taken by", value=ctx.author.name)
         embed.add_field(name="Duration", value=duration_text)
-        embed.add_field(name="Expiry", value="{:%A, %d. %B %Y @ %H:%M:%S}".format(datetime.utcfromtimestamp(expiry)))
+        embed.add_field(name="Expiry", value="{:%A, %d. %B %Y @ %H:%M:%S}".format(expiry))
         if not reason:
             reason = "*no reason specified*"
         embed.add_field(name="Reason", value=reason)
@@ -222,7 +219,7 @@ class Mod:
     @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx, member: discord.Member):
         """Unmutes a member."""
-        self.remove_restriction(member, "mute")
+        await self.remove_restriction(member, "mute")
         await member.remove_roles(self.bot.mute_role)
         await ctx.send("{} can now speak again.".format(member.mention))
         embed = discord.Embed(color=discord.Color.dark_green(), timestamp=ctx.message.created_at)
@@ -244,6 +241,10 @@ class Mod:
             await ctx.send("⚠ I don't have the permissions to do this.")
         elif isinstance(error, commands.CheckFailure):
             await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
+        else:
+            if ctx.command:
+                await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
+            self.logger.exception(error, exc_info=error)
 
     @promote.error
     async def promote_handler(self, ctx, error):
@@ -252,6 +253,10 @@ class Mod:
             await ctx.send("{} Member could not be found! Usage of this command is as follows ```!promote <member> <role>```".format(ctx.message.author.mention))
         elif isinstance(error, commands.CheckFailure):
             await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
+        else:
+            if ctx.command:
+                await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
+            self.logger.exception(error, exc_info=error)
 
 
 def setup(bot):
