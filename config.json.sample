@@ -1,0 +1,20 @@
+{
+    "token": "discord token",
+    "prefix": "!",
+    "poll_time": 120,
+    "channels": {
+        "channel_name": 0
+    },
+    "roles": {
+        "role_name": 0
+    },
+    "basecommit": "",
+    "owner": 0,
+    "appveyor_token": "token",
+    "database": {
+        "host": "server",
+        "user": "user",
+        "password": "password",
+        "dbname": "porygon"
+    }
+}
