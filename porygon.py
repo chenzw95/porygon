@@ -57,7 +57,7 @@ if __name__ == "__main__":
     async def connect_db():
         bot.engine = await create_engine(host=config['database']['host'], user=config['database']['user'],
                                          password=config['database']['password'], db=config['database']['dbname'],
-                                         loop=bot.loop)
+                                         autocommit=True, loop=bot.loop)
 
     bot.loop.create_task(connect_db())
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         bot.is_setup.set()
 
     for extension in os.listdir("cogs"):
-        if extension.endswith('.py'):
+        if extension.endswith('.py') and extension != "__init__.py":
             try:
                 bot.load_extension("cogs." + extension[:-3])
             except Exception as e:
