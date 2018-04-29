@@ -9,3 +9,7 @@ restrictions_tbl = sa.Table("restrictions", metadata,
                             sa.Column("type", sa.String(30), nullable=False, index=True),
                             sa.Column("expiry", sa.DateTime, nullable=True, index=True),
                             sa.UniqueConstraint("user", "type", name="user-type"))
+
+config_tbl = sa.Table("config", metadata,
+                      sa.Column("name", sa.String(50), primary_key=True),
+                      sa.Column("value", sa.String(100)))
