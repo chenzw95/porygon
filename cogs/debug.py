@@ -136,7 +136,9 @@ class Debug:
         elif isinstance(error, discord.ext.commands.NoPrivateMessage):
             await ctx.send("⚠ This command must be executed in a server!")
         else:
-            raise error  # This will print to console (only)
+            if ctx.command:
+                await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
+            self.logger.exception(error, exc_info=error)
 
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""
