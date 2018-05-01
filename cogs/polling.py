@@ -42,6 +42,17 @@ class CommitTracker:
                         commitmessage = commitmessage[:47]+"..."
                     embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitmessage, commitauthor=commitdata['author']['login'])
                     await self.bot.basecommits_channel.send(embed=embed)
+                    headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
+                                  'Content-Type': 'application/json'}
+                    reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod",
+                               "branch": "master"}
+                    envVars = {"notifyall": "false"}
+                    reqBody["environmentVariables"] = envVars
+                    async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
+                                                     json=reqBody) as resp:
+                        if resp.status != 200:
+                            response = await resp.text()
+                            self.logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
             except KeyError:
                 self.logger.error("Repo polling failed: {}".format(data))
             except Exception as e:
