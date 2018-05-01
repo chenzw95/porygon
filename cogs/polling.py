@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from datetime import datetime
 
 import discord
 
@@ -29,11 +30,12 @@ class CommitTracker:
             try:
                 commitdata = data[0]
                 commit = commitdata['sha']
+                committime = datetime.strptime(commitdata['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
                 if commit != oldcommit:
                     self.bot.config['basecommit'] = commit
                     with open("config.json", 'w') as conf:
                         json.dump(self.bot.config, conf, indent=4)
-                    embed = discord.Embed(color=7506394)
+                    embed = discord.Embed(color=7506394, timestamp=committime)
                     embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
                     embed.url = commitdata['html_url']
                     embed.set_author(name=commitdata['author']['login'], icon_url=commitdata['author']['avatar_url'], url=commitdata['author']['html_url'])
