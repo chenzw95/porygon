@@ -100,6 +100,15 @@ class BuildCog:
         elif isinstance(error, discord.ext.commands.CheckFailure):
             await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
 
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_any_role("GitHub Contributors", "Moderators")
+    async def togglenotify(self, ctx):
+        buildupdates = discord.utils.get(self.bot.main_server.roles, name="BuildUpdates")
+        mention_flag = not buildupdates.mentionable
+        await buildupdates.edit(mentionable=mention_flag, reason="Toggled by {}".format(ctx.author.name))
+        await ctx.send("✅ Toggled mentionable flag. New value: {}".format(mention_flag))
+
 
 def setup(bot):
     bot.add_cog(BuildCog(bot))
