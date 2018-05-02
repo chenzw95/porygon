@@ -17,14 +17,12 @@ class BuildCog:
     async def build(self, ctx, mgdb_commit: bool=False):
         """
         Initiates a new build on AppVeyor.
-
-        Specify mgdb_commit as true to have the MGDB Downloader download the full database.
         """
+        if mgdb_commit:
+            return await ctx.send("🚫 MGDB Downloader behaviour is no longer determined at compile-time.")
         async with ctx.typing():
             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
             reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
-            if mgdb_commit:
-                reqBody.update({"environmentVariables": {"latestcommit": "true"}})
             async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
                                     json=reqBody) as resp:
                 if resp.status == 200:
@@ -32,10 +30,6 @@ class BuildCog:
                     embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
                     embed.title = "Build requested"
                     embed.add_field(name="User", value=ctx.message.author.mention)
-                    if mgdb_commit:
-                        embed.add_field(name="Notice", value="This build will download the entire (non-release version) MGDB.")
-                    else:
-                        embed.add_field(name="Notice", value="This build will download the latest release version of MGDB.")
                     await self.bot.builds_channel.send(embed=embed)
                 else:
                     response = await resp.text()
@@ -49,16 +43,14 @@ class BuildCog:
     async def buildme(self, ctx, mgdb_commit: bool = False):
         """
         Initiates a new build on AppVeyor. Will not ping those subscribed to build updates.
-
-        Specify mgdb_commit as true to have the MGDB Downloader download the full database.
         """
+        if mgdb_commit:
+            return await ctx.send("🚫 MGDB Downloader behaviour is no longer determined at compile-time.")
         async with ctx.typing():
             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
                           'Content-Type': 'application/json'}
             reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
             envVars = {"notifyall": "false"}
-            if mgdb_commit:
-                envVars["latestcommit"] = "true"
             reqBody["environmentVariables"] = envVars
             async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
                                     json=reqBody) as resp:
@@ -67,12 +59,6 @@ class BuildCog:
                     embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
                     embed.title = "Private build requested"
                     embed.add_field(name="User", value=ctx.message.author.mention)
-                    if mgdb_commit:
-                        embed.add_field(name="Notice",
-                                        value="This build will download the entire (non-release version) MGDB.")
-                    else:
-                        embed.add_field(name="Notice",
-                                        value="This build will download the latest release version of MGDB.")
                     await self.bot.builds_channel.send(embed=embed)
                 else:
                     response = await resp.text()
