@@ -195,8 +195,6 @@ class Debug:
                     await ctx.send("Large output:", file=discord.File(io.BytesIO(result.encode("utf-8")), filename="output.txt"))
                 else:
                     await ctx.send(result)
-            else:
-                await ctx.send("Command returned no output.")
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @checks.check_permissions_or_owner(administrator=True)
