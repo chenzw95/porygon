@@ -18,26 +18,21 @@ class Faq:
         with open("faq.json", "r") as f:
             faq_db = json.load(f)
         messages = []
-        combined = []
         for id, entry in enumerate(faq_db, start=1):
-            combined.append("❔ Q{}. __{}__\n{}".format(id, entry[0], entry[1]))
-            if len("\n\n".join(combined)) > 2000:
-                combined.pop()
-                messages.append("\n\n".join(combined[:]))
-                combined.clear()
-                combined.append("❔ Q{}. __{}__\n{}".format(id, entry[0], entry[1]))
-            if len(faq_db) <= id:
-                messages.append("\n\n".join(combined[:]))
+            embed = discord.Embed(color=discord.Color.red())
+            embed.title = "Q{}. {}".format(id, entry[0])
+            embed.description = entry[1]
+            messages.append(embed)
         counter = 0
         predicate = lambda m: m.author == self.bot.user
         async for message in self.bot.faq_channel.history(limit=100, reverse=True).filter(predicate):
             if counter < len(messages):
-                await message.edit(content=messages[counter])
+                await message.edit(embed=messages[counter])
                 counter += 1
             else:
                 await message.delete()
         for message in messages[counter:]:
-            await self.bot.faq_channel.send(message)
+            await self.bot.faq_channel.send(embed=message)
 
     @commands.group(invoke_without_command=True)
     async def faq(self, ctx):
