@@ -151,7 +151,7 @@ class BlurpleCog:
         await ctx.send(embed=embed, file=image)
 
 
-    @commands.command(aliases=['blurplfy', 'blurplefier', 'blurplfygif', 'blurplefiergif', 'blurplefygif'])
+    @commands.command(aliases=['blu', 'blurplfy', 'blurplefier', 'blurplfygif', 'blurplefiergif', 'blurplefygif'])
     #@commands.cooldown(rate=1, per=180, type=BucketType.user)
     async def blurplefy(self, ctx, arg1=None):
         if not arg1:
