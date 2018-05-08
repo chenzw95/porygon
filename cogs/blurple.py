@@ -130,7 +130,7 @@ class BlurpleCog:
             url = ctx.message.attachments[0].url
         else:
             url = member.avatar_url
-        frames, url = await self.collect_image(ctx, url, True)
+        frames, url = await self.collect_image(ctx, url, False)
         if frames is None:
             return await ctx.message.add_reaction('\N{CROSS MARK}')
 
