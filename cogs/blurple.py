@@ -181,28 +181,30 @@ class BlurpleCog:
 
             image_file_object = io.BytesIO()
             if len(frames) > 1:
+                isgif = True
                 frames[0].save(image_file_object, format='gif', save_all=True, append_images=frames[1:], loop=loop,
                                duration=duration)
             else:
+                isgif = False
                 frames[0].save(image_file_object, format='png')
             image_file_object.seek(0)
 
-            return image_file_object
+            return isgif, image_file_object
 
-        image = await self.bot.loop.run_in_executor(None, process_sequence, frames, gif_loop, gif_duration)
+        isgif, image = await self.bot.loop.run_in_executor(None, process_sequence, frames, gif_loop, gif_duration)
         image = discord.File(fp=image, filename='blurple.png' if len(frames) == 1 else 'blurple.gif')
 
         try:
             embed = discord.Embed(Title="", colour=0x7289DA)
             embed.set_author(name="Blurplefier - makes your image blurple!")
-            if len(frames) == 1:
-                embed.set_image(url="attachment://blurple.png")
-            else:
+            if isgif:
                 embed.set_image(url="attachment://blurple.gif")
+            else:
+                embed.set_image(url="attachment://blurple.png")
             embed.set_thumbnail(url=url)
             await ctx.send(embed=embed, file=image)
         except discord.errors.DiscordException:
-            await ctx.send("Error occurred.")
+            self.logger.exception("Something went wrong:")
 
 
 def setup(bot):
