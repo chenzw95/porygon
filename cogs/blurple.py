@@ -154,18 +154,21 @@ class BlurpleCog:
     @commands.command(aliases=['blu', 'blurplfy', 'blurplefier', 'blurplfygif', 'blurplefiergif', 'blurplefygif'])
     #@commands.cooldown(rate=1, per=180, type=BucketType.user)
     async def blurplefy(self, ctx, arg1=None):
-        if not arg1:
-            member = ctx.author
-        else:
-            try:
-                member = await commands.MemberConverter().convert(ctx, arg1)
-            except commands.BadArgument:
-                return await ctx.send("❌ User not found. Search terms are case sensitive.")
         if ctx.message.attachments:
             url = ctx.message.attachments[0].url
         else:
-            url = member.avatar_url
-        frames, url = await self.collect_image(ctx, url, False)
+            if not arg1:
+                url = ctx.author.avatar_url
+            else:
+                try:
+                    member = await commands.MemberConverter().convert(ctx, arg1)
+                    url = member.avatar_url
+                except commands.BadArgument:
+                    url = arg1
+        try:
+            frames, url = await self.collect_image(ctx, url, False)
+        except ValueError:
+            return await ctx.send("This does not appear to be a valid URL nor member.")
         if frames is None:
             return await ctx.message.add_reaction('\N{CROSS MARK}')
 
