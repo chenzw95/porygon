@@ -105,14 +105,18 @@ class BlurpleCog:
             frames[n] = frame.convert('RGBA')
         return frames, url
 
-    def blurplefy_image(self, img):
-        #img = img.convert(mode='L')
-        img = ImageEnhance.Contrast(img).enhance(1000)
+    def blurplefy_image(self, img, white = 230, blurple = 20, contrast_strength = 3):
+        img = ImageEnhance.Contrast(img).enhance(contrast_strength)
         img = img.convert(mode='RGBA')
 
         arr = np.asarray(img).copy()
         arr2 = copy.deepcopy(arr[:,:,3])
-        arr[np.any(arr != 255, axis=2)] = self.BLURPLE
+        white_arr = np.any(arr > white, axis=2)
+        blurple_arr = np.any(arr < white + 1, axis=2)
+        dark_blurple_arr = np.any(arr < blurple + 1, axis=2)
+        arr[white_arr] = self.WHITE
+        arr[blurple_arr] = self.BLURPLE
+        arr[dark_blurple_arr] = self.DARK_BLURPLE
         arr[:,:,3] = arr2
         return Image.fromarray(np.uint8(arr))
 
@@ -153,7 +157,7 @@ class BlurpleCog:
 
     @commands.command(aliases=['blu', 'blurplfy', 'blurplefier', 'blurplfygif', 'blurplefiergif', 'blurplefygif'])
     #@commands.cooldown(rate=1, per=180, type=BucketType.user)
-    async def blurplefy(self, ctx, arg1=None):
+    async def blurplefy(self, ctx, arg1=None, white = 230, blurple = 20, contrast_strength = 3):
         if ctx.message.attachments:
             url = ctx.message.attachments[0].url
         else:
@@ -180,7 +184,7 @@ class BlurpleCog:
 
         def process_sequence(frames, loop, duration):
             for n, frame in enumerate(frames):
-                frames[n] = self.blurplefy_image(frame)
+                frames[n] = self.blurplefy_image(frame, white, blurple, contrast_strength)
 
             image_file_object = io.BytesIO()
             if len(frames) > 1:
