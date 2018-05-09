@@ -6,7 +6,6 @@ import logging
 import math
 import io
 import discord
-import copy
 from discord.ext import commands
 from discord.ext.commands import BucketType
 
@@ -107,7 +106,7 @@ class BlurpleCog:
 
     def blurplefy_image(self, img, white = 230, blurple = 20, contrast_strength = 3, greyscale = False, transparent = True):
         if greyscale:
-             img = img.convert(mode='L')
+             img = img.convert(mode='LA')
         img = ImageEnhance.Contrast(img).enhance(contrast_strength)
         img = img.convert(mode='RGBA')
 
