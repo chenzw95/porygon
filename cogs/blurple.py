@@ -79,7 +79,7 @@ class BlurpleCog:
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
-        self.process_pool = concurrent.futures.ProcessPoolExecutor(max_workers=3)
+        self.process_pool = concurrent.futures.ProcessPoolExecutor(max_workers=2)
 
     def __unload(self):
         self.process_pool.shutdown(wait=False)
