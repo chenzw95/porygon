@@ -1,6 +1,6 @@
 import traceback
 import datetime
-import aiohttp
+import concurrent.futures
 import copy
 import logging
 import math
@@ -65,19 +65,59 @@ class ImageStats:
 
 
 class BlurpleCog:
+    BLURPLE = (114, 137, 218, 255)
+    BLURPLE_HEX = 0x7289da
+    DARK_BLURPLE = (78, 93, 148, 255)
+    WHITE = (255, 255, 255, 255)
+
+    PIXEL_COUNT_LIMIT = 3840 * 2160
+    MAX_PIXEL_COUNT = 1280 * 720
+    MAX_FILE_SIZE = 8 * 1024 * 1024 * 16  # 16M
+
+    COLOUR_BUFFER = 20
+
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
-        self.BLURPLE = (114, 137, 218, 255)
-        self.BLURPLE_HEX = 0x7289da
-        self.DARK_BLURPLE = (78, 93, 148, 255)
-        self.WHITE = (255, 255, 255, 255)
+        self.process_pool = concurrent.futures.ProcessPoolExecutor(max_workers=3)
 
-        self.PIXEL_COUNT_LIMIT = 3840 * 2160
-        self.MAX_PIXEL_COUNT = 1280 * 720
-        self.MAX_FILE_SIZE = 8 * 1024 * 1024 * 16  # 16M
+    def __unload(self):
+        self.process_pool.shutdown(wait=False)
 
-        self.COLOUR_BUFFER = 20
+    @classmethod
+    def process_sequence(cls, frames, loop, duration, white, blurple, contrast_strength, greyscale, transparent):
+        for n, frame in enumerate(frames):
+            frames[n] = cls.blurplefy_image(frame, white, blurple, contrast_strength, greyscale, transparent)
+
+        image_file_object = io.BytesIO()
+        if len(frames) > 1:
+            isgif = True
+            frames[0].save(image_file_object, format='gif', save_all=True, append_images=frames[1:], loop=loop,
+                           duration=duration)
+        else:
+            isgif = False
+            frames[0].save(image_file_object, format='png')
+        image_file_object.seek(0)
+        return isgif, image_file_object
+
+    @classmethod
+    def blurplefy_image(cls, img, white = 230, blurple = 20, contrast_strength = 3, greyscale = False, transparent = True):
+        if greyscale:
+             img = img.convert(mode='LA')
+        img = ImageEnhance.Contrast(img).enhance(contrast_strength)
+        img = img.convert(mode='RGBA')
+
+        arr = np.asarray(img).copy()
+        arr2 = copy.deepcopy(arr[:,:,3])
+        white_arr = np.any(arr > white, axis=2)
+        blurple_arr = np.any(arr < white + 1, axis=2)
+        dark_blurple_arr = np.any(arr < blurple + 1, axis=2)
+        arr[white_arr] = cls.WHITE
+        arr[blurple_arr] = cls.BLURPLE
+        arr[dark_blurple_arr] = cls.DARK_BLURPLE
+        if transparent:
+             arr[:,:,3] = arr2
+        return Image.fromarray(np.uint8(arr))
 
     async def collect_image(self, ctx, url, static=False):
         data = io.BytesIO()
@@ -103,24 +143,6 @@ class BlurpleCog:
         for n, frame in enumerate(frames):
             frames[n] = frame.convert('RGBA')
         return frames, url
-
-    def blurplefy_image(self, img, white = 230, blurple = 20, contrast_strength = 3, greyscale = False, transparent = True):
-        if greyscale:
-             img = img.convert(mode='LA')
-        img = ImageEnhance.Contrast(img).enhance(contrast_strength)
-        img = img.convert(mode='RGBA')
-
-        arr = np.asarray(img).copy()
-        arr2 = copy.deepcopy(arr[:,:,3])
-        white_arr = np.any(arr > white, axis=2)
-        blurple_arr = np.any(arr < white + 1, axis=2)
-        dark_blurple_arr = np.any(arr < blurple + 1, axis=2)
-        arr[white_arr] = self.WHITE
-        arr[blurple_arr] = self.BLURPLE
-        arr[dark_blurple_arr] = self.DARK_BLURPLE
-        if transparent:
-             arr[:,:,3] = arr2
-        return Image.fromarray(np.uint8(arr))
 
 
     @commands.command()
@@ -185,22 +207,6 @@ class BlurpleCog:
         else:
             gif_loop = gif_duration = None
 
-        def process_sequence(frames, loop, duration, greyscale, transparent):
-            for n, frame in enumerate(frames):
-                frames[n] = self.blurplefy_image(frame, white, blurple, contrast_strength, greyscale, transparent)
-
-            image_file_object = io.BytesIO()
-            if len(frames) > 1:
-                isgif = True
-                frames[0].save(image_file_object, format='gif', save_all=True, append_images=frames[1:], loop=loop,
-                               duration=duration)
-            else:
-                isgif = False
-                frames[0].save(image_file_object, format='png')
-            image_file_object.seek(0)
-
-            return isgif, image_file_object
-
         if greyscale.lower() == "true":
             greyscale = True
         else: 
@@ -209,7 +215,9 @@ class BlurpleCog:
             transparent = False
         else: 
             transparent = True
-        isgif, image = await self.bot.loop.run_in_executor(None, process_sequence, frames, gif_loop, gif_duration, greyscale, transparent)
+        isgif, image = await self.bot.loop.run_in_executor(self.process_pool, BlurpleCog.process_sequence,
+                                                           frames, gif_loop, gif_duration, white, blurple,
+                                                           contrast_strength, greyscale, transparent)
         image = discord.File(fp=image, filename='blurple.png' if len(frames) == 1 else 'blurple.gif')
 
         try:
