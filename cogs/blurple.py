@@ -105,7 +105,9 @@ class BlurpleCog:
             frames[n] = frame.convert('RGBA')
         return frames, url
 
-    def blurplefy_image(self, img, white = 230, blurple = 20, contrast_strength = 3):
+    def blurplefy_image(self, img, white = 230, blurple = 20, contrast_strength = 3, greyscale = False, transparent = True):
+        if greyscale:
+             img = img.convert(mode='L')
         img = ImageEnhance.Contrast(img).enhance(contrast_strength)
         img = img.convert(mode='RGBA')
 
@@ -117,8 +119,10 @@ class BlurpleCog:
         arr[white_arr] = self.WHITE
         arr[blurple_arr] = self.BLURPLE
         arr[dark_blurple_arr] = self.DARK_BLURPLE
-        arr[:,:,3] = arr2
+        if transparent:
+             arr[:,:,3] = arr2
         return Image.fromarray(np.uint8(arr))
+
 
     @commands.command()
     #@commands.cooldown(rate=1, per=180, type=BucketType.user)
@@ -157,7 +161,7 @@ class BlurpleCog:
 
     @commands.command(aliases=['blu', 'blurplfy', 'blurplefier', 'blurplfygif', 'blurplefiergif', 'blurplefygif'])
     #@commands.cooldown(rate=1, per=180, type=BucketType.user)
-    async def blurplefy(self, ctx, arg1=None, white = 230, blurple = 20, contrast_strength = 3):
+    async def blurplefy(self, ctx, arg1=None, white = 230, blurple = 20, contrast_strength = 3, greyscale = "false", transparent = "true"):
         if ctx.message.attachments:
             url = ctx.message.attachments[0].url
         else:
@@ -182,9 +186,9 @@ class BlurpleCog:
         else:
             gif_loop = gif_duration = None
 
-        def process_sequence(frames, loop, duration):
+        def process_sequence(frames, loop, duration, greyscale, transparent):
             for n, frame in enumerate(frames):
-                frames[n] = self.blurplefy_image(frame, white, blurple, contrast_strength)
+                frames[n] = self.blurplefy_image(frame, white, blurple, contrast_strength, greyscale, transparent)
 
             image_file_object = io.BytesIO()
             if len(frames) > 1:
@@ -198,7 +202,15 @@ class BlurpleCog:
 
             return isgif, image_file_object
 
-        isgif, image = await self.bot.loop.run_in_executor(None, process_sequence, frames, gif_loop, gif_duration)
+        if greyscale.lower() == "true":
+            greyscale = True
+        else: 
+            greyscale = False
+        if transparent.lower() == "false":
+            transparent = False
+        else: 
+            transparent = True
+        isgif, image = await self.bot.loop.run_in_executor(None, process_sequence, frames, gif_loop, gif_duration, greyscale, transparent)
         image = discord.File(fp=image, filename='blurple.png' if len(frames) == 1 else 'blurple.gif')
 
         try:
@@ -213,6 +225,7 @@ class BlurpleCog:
         except discord.errors.DiscordException:
             self.logger.exception("Something went wrong:")
 
+    
 
 def setup(bot):
     bot.add_cog(BlurpleCog(bot))
