@@ -72,7 +72,7 @@ class BlurpleCog:
 
     PIXEL_COUNT_LIMIT = 3840 * 2160
     MAX_PIXEL_COUNT = 1280 * 720
-    MAX_FILE_SIZE = 8 * 1024 * 1024 * 16  # 16M
+    MAX_FILE_SIZE = 1024 * 1024 * 16  # 16M
 
     COLOUR_BUFFER = 20
 
@@ -121,10 +121,18 @@ class BlurpleCog:
 
     async def collect_image(self, ctx, url, static=False):
         data = io.BytesIO()
+        length = 0
         async with self.bot.session.get(url) as resp:
-            dat = await resp.read()
-            data.write(dat)
+            while True:
+                dat = await resp.content.read(16384)
+                if not dat:
+                    break
+                length += len(dat)
+                if length > self.MAX_FILE_SIZE:
+                    return None, None
+                data.write(dat)
 
+        data.seek(0)
         im = Image.open(data)
         frames = []
         for frame in ImageSequence.Iterator(im):
