@@ -117,4 +117,7 @@ if __name__ == "__main__":
             except Exception as e:
                 logger.exception('Failed to load extension {}'.format(extension))
 
-    bot.run(config['token'])
+    try:
+        bot.run(config['token'])
+    finally:
+        sys.exit(-1)
