@@ -111,7 +111,7 @@ if __name__ == "__main__":
         bot.is_setup.set()
 
     for extension in os.listdir("cogs"):
-        if extension.endswith('.py') and extension != "__init__.py":
+        if extension.endswith('.py') and extension != "__init__.py" and "_alt" not in extension:
             try:
                 bot.load_extension("cogs." + extension[:-3])
             except Exception as e:

@@ -1,9 +1,10 @@
 import asyncio
-import json
 import logging
 from datetime import datetime
 
 import discord
+
+from database import config_tbl
 
 
 class CommitTracker:
@@ -23,18 +24,21 @@ class CommitTracker:
     async def trackCommits(self):
         await self.bot.wait_for_setup()
         while not self.bot.is_closed():
-            oldcommit = self.bot.config['basecommit']
-            owner = 'kwsch'
-            repo = 'PKHeX'
-            data = await self.get_latest_commit(owner, repo) 
             try:
+                async with self.bot.engine.acquire() as conn:
+                    query = config_tbl.select(config_tbl.c.value).where(config_tbl.c.name == "basecommit")
+                    oldcommit = conn.scalar(query)
+                owner = 'kwsch'
+                repo = 'PKHeX'
+                data = await self.get_latest_commit(owner, repo)
                 commitdata = data[0]
                 commit = commitdata['sha']
                 committime = datetime.strptime(commitdata['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
                 if commit != oldcommit:
-                    self.bot.config['basecommit'] = commit
-                    with open("config.json", 'w') as conf:
-                        json.dump(self.bot.config, conf, indent=4)
+                    self.logger.info("Base PKHeX updated to {}.".format(commit))
+                    async with self.bot.engine.acquire() as conn:
+                        query = config_tbl.update().where(config_tbl.c.name == "basecommit").values(value=commit)
+                        await conn.execute(query)
                     embed = discord.Embed(color=7506394, timestamp=committime)
                     embed.title = "[{repo}:master] 1 new commit".format(repo=repo)
                     embed.url = commitdata['html_url']
