@@ -1,17 +1,15 @@
-import traceback
-import datetime
 import concurrent.futures
 import copy
+import io
 import logging
 import math
-import io
+import time
+
 import discord
+import numpy as np
+from PIL import Image, ImageEnhance, ImageSequence
 from discord.ext import commands
 from discord.ext.commands import BucketType
-
-import numpy as np
-
-from PIL import Image, ImageEnhance, ImageSequence
 
 
 class ImageStats:
@@ -191,6 +189,7 @@ class BlurpleCog:
     @commands.command(aliases=['blu', 'blurplfy', 'blurplefier', 'blurplfygif', 'blurplefiergif', 'blurplefygif'])
     #@commands.cooldown(rate=1, per=180, type=BucketType.user)
     async def blurplefy(self, ctx, arg1=None, white = 230, blurple = 20, contrast_strength = 3, greyscale = "false", transparent = "true"):
+        start = time.perf_counter()
         if ctx.message.attachments:
             url = ctx.message.attachments[0].url
         else:
@@ -223,12 +222,16 @@ class BlurpleCog:
             transparent = False
         else: 
             transparent = True
-        isgif, image = await self.bot.loop.run_in_executor(self.process_pool, BlurpleCog.process_sequence,
-                                                           frames, gif_loop, gif_duration, white, blurple,
-                                                           contrast_strength, greyscale, transparent)
+        try:
+            isgif, image = await self.bot.loop.run_in_executor(self.process_pool, BlurpleCog.process_sequence,
+                                                               frames, gif_loop, gif_duration, white, blurple,
+                                                               contrast_strength, greyscale, transparent)
+        except:
+            return await ctx.message.add_reaction('\N{CROSS MARK}')
         image = discord.File(fp=image, filename='blurple.png' if len(frames) == 1 else 'blurple.gif')
 
         try:
+            end = time.perf_counter()
             embed = discord.Embed(Title="", colour=0x7289DA)
             embed.set_author(name="Blurplefier - makes your image blurple!")
             if isgif:
@@ -236,6 +239,7 @@ class BlurpleCog:
             else:
                 embed.set_image(url="attachment://blurple.png")
             embed.set_thumbnail(url=url)
+            embed.set_footer(text="Time taken: {:.4f}s".format(end - start))
             await ctx.send(embed=embed, file=image)
         except discord.errors.DiscordException:
             self.logger.exception("Something went wrong:")
