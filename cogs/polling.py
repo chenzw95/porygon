@@ -105,7 +105,7 @@ class CommitTracker:
     @commands.command(name='githubunwatch', aliases=['gitunwatch', 'untrack'])
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
-    async def githubtrack(self, ctx, argument:str, owner=None):
+    async def githubuntrack(self, ctx, argument:str, owner=None):
         """
         Remove tracking of a GitHub repository. argument is a mandatory url/reponame
         """
