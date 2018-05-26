@@ -57,15 +57,15 @@ class CommitTracker:
                             commitmessage = commitmessage[:47]+"..."
                         embed.description = "[`{shortcommithash}`]({commiturl}) {commitmessage} - {commitauthor}".format(shortcommithash=commit[0:7], commiturl=commitdata['html_url'], commitmessage=commitmessage, commitauthor=commitdata['author']['login'])
                         await self.bot.basecommits_channel.send(embed=embed)
-                        if repo=="PKHeX" and owner=="kwsch":
+                        if repo == "PKHeX" and owner == "kwsch":
                             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
-                                        'Content-Type': 'application/json'}
+                                          'Content-Type': 'application/json'}
                             reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod",
-                                    "branch": "master"}
+                                       "branch": "master"}
                             envVars = {"notifyall": "false"}
                             reqBody["environmentVariables"] = envVars
                             async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
-                                                            json=reqBody) as resp:
+                                                             json=reqBody) as resp:
                                 if resp.status != 200:
                                     response = await resp.text()
                                     self.logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
@@ -81,11 +81,11 @@ class CommitTracker:
     @commands.command(name='githubwatch', aliases=['gitwatch', 'track'])
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
-    async def githubtrack(self, ctx, argument:str, owner=None):
+    async def githubtrack(self, ctx, argument: str, owner=None):
         """
         Tracks a GitHub repository. argument is a mandatory url/reponame
         """
-        if owner==None:
+        if owner is None:
             if "github.com/" in argument.lower():
                 repo = argument.split("github.com/")[1].split("/")[1]
                 owner = argument.split("github.com/")[1].split("/")[0]
@@ -105,11 +105,11 @@ class CommitTracker:
     @commands.command(name='githubunwatch', aliases=['gitunwatch', 'untrack'])
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
-    async def githubuntrack(self, ctx, argument:str, owner=None):
+    async def githubuntrack(self, ctx, argument: str, owner=None):
         """
         Remove tracking of a GitHub repository. argument is a mandatory url/reponame
         """
-        if owner==None:
+        if owner is None:
             if "github.com/" in argument.lower():
                 repo = argument.split("github.com/")[1].split("/")[1]
                 owner = argument.split("github.com/")[1].split("/")[0]
@@ -119,7 +119,7 @@ class CommitTracker:
             repo = argument
 
         onwatch = False
-        watchedval = ("","","")
+        watchedval = ("", "", "")
         for repository in self.githubwatch:
             if repository[0] == repo and repository[1] == owner:
                 onwatch = True
@@ -133,6 +133,7 @@ class CommitTracker:
             self.githubwatch.remove(watchedval)
             await conn.execute(query)
             return await ctx.send("{repo} has been removed to the GitHub watchlist".format(repo=repo))
+
 
 def setup(bot):
     bot.add_cog(CommitTracker(bot))
