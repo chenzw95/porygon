@@ -90,17 +90,17 @@ class CommitTracker:
                 repo = argument.split("github.com/")[1].split("/")[1]
                 owner = argument.split("github.com/")[1].split("/")[0]
             else:
-                return await ctx.send("Invalid URL")
+                return await ctx.send("⚠ Invalid URL.")
         else:
             repo = argument
         # requests used since no benefit an async based request for just a one time command
         request = requests.get("https://github.com/{owner}/{repo}".format(owner=owner, repo=repo))
         if request.status_code != 200:
-            return await ctx.send("No such repository exists")
+            return await ctx.send("❌ No such repository exists.")
         async with self.bot.engine.acquire() as conn:
             query = github_watch_tbl.insert().values(name=repo, owner=owner, commit="new_commit")
             await conn.execute(query)
-            return await ctx.send("{repo} has been added to the GitHub watchlist".format(repo=repo))
+            return await ctx.send("✅ {repo} has been added to the GitHub watchlist.".format(repo=repo))
 
     @commands.command(name='githubunwatch', aliases=['gitunwatch', 'untrack'])
     @commands.guild_only()
@@ -114,7 +114,7 @@ class CommitTracker:
                 repo = argument.split("github.com/")[1].split("/")[1]
                 owner = argument.split("github.com/")[1].split("/")[0]
             else:
-                return await ctx.send("Invalid URL")
+                return await ctx.send("⚠ Invalid URL.")
         else:
             repo = argument
 
@@ -126,13 +126,13 @@ class CommitTracker:
                 watchedval = repository
 
         if not onwatch:
-            return await ctx.send("This repository is not currently on the GitHub watchlist")
+            return await ctx.send("❌ This repository is not currently on the GitHub watchlist.")
 
         async with self.bot.engine.acquire() as conn:
             query = github_watch_tbl.delete().where(github_watch_tbl.c.name == repo)
             self.githubwatch.remove(watchedval)
             await conn.execute(query)
-            return await ctx.send("{repo} has been removed to the GitHub watchlist".format(repo=repo))
+            return await ctx.send("✅ {repo} has been removed from the GitHub watchlist.".format(repo=repo))
 
 
 def setup(bot):
