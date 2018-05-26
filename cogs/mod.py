@@ -19,8 +19,6 @@ class Mod:
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
-        with open("restrictions.json", "r") as f:
-            self.bot.restrictions_db = json.load(f)
         self.expiry_task = bot.loop.create_task(self.check_expiry())
 
     def __unload(self):
