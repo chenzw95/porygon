@@ -18,3 +18,10 @@ github_watch_tbl = sa.Table("github-watch", metadata,
                       sa.Column("name", sa.String(100), nullable=False, primary_key=True),
                       sa.Column("owner", sa.String(50), nullable=False, primary_key=True),
                       sa.Column("commit", sa.String(50), nullable=False))
+
+starboard_tbl = sa.Table("starboard", metadata,
+                      sa.Column("message_id", sa.Integer, primary_key=True),
+                      sa.Column("author_id", sa.Integer, nullable=False),
+                      sa.Column("star_count", sa.Integer),
+                      sa.Column("starboard_id", sa.Integer, nullable=False),
+                      sa.Column("channel_id", sa.Integer, nullable=False))
