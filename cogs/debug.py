@@ -122,7 +122,10 @@ class Debug:
         embed.set_author(name="User information")
         embed.add_field(name="ID", value=member.id).add_field(name="Status", value=member.status)
         embed.add_field(name="Activity", value=member.activity)
-        embed.add_field(name="Roles", value=", ".join([str(role) for role in member.roles[1:]]), inline=False)
+        if len(member.roles) > 1:
+            embed.add_field(name="Roles", value=", ".join([str(role) for role in member.roles[1:]]), inline=False)
+        else:
+            embed.add_field(name="Roles", value="None", inline=False)
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         await ctx.send(embed=embed)
