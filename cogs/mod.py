@@ -176,7 +176,7 @@ class Mod:
     @commands.command(aliases=['tmute', 'timemute'])
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
-    async def timedmute(self, ctx, member: discord.Member, duration, reason: str = None):
+    async def timedmute(self, ctx, member: discord.Member, duration, *, reason: str = None):
         """Mutes a member temporarily."""
         if ctx.author.top_role.position < member.top_role.position + 1:
             return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
