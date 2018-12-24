@@ -22,7 +22,7 @@ class BuildCog:
             return await ctx.send("🚫 MGDB Downloader behaviour is no longer determined at compile-time.")
         async with ctx.typing():
             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
-            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
+            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
             async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
                                     json=reqBody) as resp:
                 if resp.status == 200:
@@ -49,7 +49,7 @@ class BuildCog:
         async with ctx.typing():
             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
                           'Content-Type': 'application/json'}
-            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod", "branch": "master"}
+            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
             envVars = {"notifyall": "false"}
             reqBody["environmentVariables"] = envVars
             async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
