@@ -60,7 +60,7 @@ class CommitTracker:
                         if repo == "PKHeX" and owner == "kwsch":
                             headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
                                           'Content-Type': 'application/json'}
-                            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-auto-legality-mod",
+                            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-plugins",
                                        "branch": "master"}
                             envVars = {"notifyall": "false"}
                             reqBody["environmentVariables"] = envVars
