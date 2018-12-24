@@ -68,7 +68,8 @@ class Mod:
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         async with self.bot.engine.acquire() as conn:
-            query = restrictions_tbl.select().where((restrictions_tbl.c.user == member.id) & (restrictions_tbl.c.expiry > datetime.utcnow()))
+            query = restrictions_tbl.select().where((restrictions_tbl.c.user == member.id) & ((restrictions_tbl.c.expiry > datetime.utcnow()) |
+                                                                                              (restrictions_tbl.c.expiry == None)))
             re_add = []
             async for row in conn.execute(query):
                 re_add.append(getattr(self.bot, "{}_role".format(row.type), None))
