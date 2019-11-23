@@ -62,7 +62,7 @@ class ImageStats:
         return image_file_object, ImageStats(dark, blurple, white, pixels)
 
 
-class BlurpleCog:
+class BlurpleCog(commands.Cog):
     BLURPLE = (114, 137, 218, 255)
     BLURPLE_HEX = 0x7289da
     DARK_BLURPLE = (78, 93, 148, 255)

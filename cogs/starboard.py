@@ -5,7 +5,7 @@ from discord.ext import commands
 
 from database import config_tbl, starboard_tbl
 
-class Starboard:
+class Starboard(commands.Cog):
     """
     Adds stuff to the starboard
     """

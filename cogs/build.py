@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 
-class BuildCog:
+class BuildCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))

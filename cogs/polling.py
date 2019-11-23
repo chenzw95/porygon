@@ -9,7 +9,7 @@ from discord.ext import commands
 from database import config_tbl, github_watch_tbl
 
 
-class CommitTracker:
+class CommitTracker(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))

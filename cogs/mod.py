@@ -15,7 +15,7 @@ from .utils import checks
 from database import restrictions_tbl
 
 
-class Mod:
+class Mod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))

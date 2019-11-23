@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class Assignables:
+class Assignables(commands.Cog):
     """Assignables"""
 
     def __init__(self, bot):

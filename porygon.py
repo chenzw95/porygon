@@ -84,7 +84,7 @@ if __name__ == "__main__":
     @bot.event
     async def on_command_error(ctx, error):
         error = getattr(error, 'original', error)
-        if hasattr(ctx.command, 'on_error') or hasattr(ctx.cog, '_{0.__class__.__name__}__error'.format(ctx.cog)):
+        if hasattr(ctx.command, 'on_error') or hasattr(ctx.cog, '_{0.__class__.__name__}cog_command_error'.format(ctx.cog)):
             return
         if isinstance(error, discord.ext.commands.CommandNotFound):
             return

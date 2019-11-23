@@ -38,7 +38,7 @@ import urllib
 import psutil
 
 
-class Debug:
+class Debug(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
