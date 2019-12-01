@@ -60,6 +60,7 @@ class Mod(commands.Cog):
             delete_stmt = restrictions_tbl.delete().where((restrictions_tbl.c.user == member.id) & (restrictions_tbl.c.type == r_type))
             await conn.execute(delete_stmt)
 
+    @commands.Cog.listener()
     async def on_member_join(self, member):
         embed = discord.Embed(color=discord.Color.green())
         embed.title = "🆕 New member"
@@ -78,6 +79,7 @@ class Mod(commands.Cog):
                 embed.add_field(name="⚠ Restrictions re-applied", value=", ".join([x.name for x in re_add]), inline=False)
         await self.bot.modlog_channel.send(embed=embed)
 
+    @commands.Cog.listener()
     async def on_member_remove(self, member):
         embed = discord.Embed(color=discord.Color.red(), timestamp=datetime.utcnow())
         embed.title = "🚪 Member left"

@@ -108,11 +108,13 @@ class Starboard(commands.Cog):
                 self._message_cache[sent_message.id] = sent_message
                 await conn.execute(query)
 
+    @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if str(reaction.emoji) != '⭐':
             return
         await self.update_db(reaction.message,1)
-    
+
+    @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
         if str(reaction.emoji) != '⭐':
             return

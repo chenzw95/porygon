@@ -1,10 +1,12 @@
 import discord
+from discord.ext import commands
 
 
 class Welcome(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
     async def on_member_join(self, user):
         welcome = discord.Embed(color=discord.Color.gold())
         welcome.title = "Welcome to the PKHeX Auto Legality Mods server, {}!".format(user.name)
