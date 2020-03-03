@@ -9,7 +9,7 @@ from discord.ext import commands
 from .utils import checks
 
 
-class Faq:
+class Faq(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
@@ -25,7 +25,7 @@ class Faq:
             messages.append(embed)
         counter = 0
         predicate = lambda m: m.author == self.bot.user
-        async for message in self.bot.faq_channel.history(limit=100, reverse=True).filter(predicate):
+        async for message in self.bot.faq_channel.history(limit=100, oldest_first=True).filter(predicate):
             if counter < len(messages):
                 await message.edit(embed=messages[counter])
                 counter += 1
