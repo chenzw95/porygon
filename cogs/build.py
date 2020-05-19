@@ -13,7 +13,7 @@ class BuildCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(rate=1, per=7200.0)
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "Development")
     async def build(self, ctx, mgdb_commit: bool=False):
         """
         Initiates a new build on AppVeyor.
@@ -39,7 +39,7 @@ class BuildCog(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @commands.cooldown(rate=1, per=7200.0)
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "Development")
     async def buildme(self, ctx, mgdb_commit: bool = False):
         """
         Initiates a new build on AppVeyor. Will not ping those subscribed to build updates.
@@ -102,7 +102,7 @@ class BuildCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.has_any_role("GitHub Contributors", "Moderators")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "Development")
     async def togglenotify(self, ctx):
         buildupdates = discord.utils.get(self.bot.main_server.roles, name="BuildUpdates")
         mention_flag = not buildupdates.mentionable
