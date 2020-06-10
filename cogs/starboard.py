@@ -49,7 +49,8 @@ class Starboard(commands.Cog):
                 embed.set_image(url=file.url)
             else:
                 embed.add_field(name='Attachment', value='[{0}]({1})'.format(file.filename, file.url), inline=False)
-
+        
+        embed.add_field(name='Context', value='[Jump!]({0})'.format(message.jump_url), inline=False)
         embed.set_author(name=message.author.display_name, icon_url=message.author.avatar_url_as(format='png'))
         embed.timestamp = message.created_at
         embed.colour = self.star_gradient_colour(count)
