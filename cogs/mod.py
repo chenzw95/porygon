@@ -148,7 +148,7 @@ class Mod(commands.Cog):
             if author.top_role.position < member.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
-                await member.ban(reason=reason)
+                await member.ban(reason=reason, delete_message_days=0)
                 return_msg = "Banned user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
