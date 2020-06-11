@@ -129,6 +129,21 @@ class Faq(commands.Cog):
             msg = "\n\n".join(entry)
         await ctx.send("```\n{}\n```".format(msg))
 
+    @faq.command(aliases=['display'])
+    async def view(self, ctx, faq_id: int = 0):
+        if faq_id == 0:
+            return await ctx.send("⚠ FAQ entry ID is required.")
+        with open("faq.json", "r") as f:
+            faq_db = json.load(f)
+        try:
+            entry = faq_db[faq_id - 1]
+        except IndexError:
+            return await ctx.send("⚠ No such entry exists.")
+        embed = discord.Embed(color=discord.Color.red())
+        embed.title = "Q{}. {}".format(faq_id, entry[0])
+        embed.description = entry[1]
+        await ctx.send(embed=embed)
+
     @faq.command()
     async def refresh(self, ctx):
         self.bot.loop.create_task(self.update_faq())
