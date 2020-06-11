@@ -36,7 +36,7 @@ class Faq(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def faq(self, ctx):
-        pass
+        await ctx.send_help(ctx.command)
 
     @faq.command()
     @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
