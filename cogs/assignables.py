@@ -10,6 +10,13 @@ class Assignables(commands.Cog):
     @commands.command(name='toggleupdates', aliases=['buildupdates'])
     async def buildupdates(self, ctx):
         """Toggles the BuildUpdates role"""
+        if not ctx.channel.id == 429185857346338827:
+            await ctx.message.delete()
+            try:
+                await ctx.author.send("This command can only be used in <#429185857346338827>. Please move there.
+            except discord.Forbidden:
+                pass
+            return
         burole = discord.utils.get(ctx.guild.roles, name="BuildUpdates")
         embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
         embed.add_field(name="User", value=ctx.message.author.mention)
