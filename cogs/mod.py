@@ -20,7 +20,11 @@ class Mod(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
-        self.kick_counter = 4  # Current count as of addition
+        with open("kick_counter.txt", "r") as f:
+            try:
+                self.kick_counter = int(f.read())
+            except ValueError:
+                self.kick_counter = 0
 
     def __unload(self):
         self.expiry_task.cancel()
@@ -135,6 +139,8 @@ class Mod(commands.Cog):
                     pass
                 await member.kick(reason=reason)
                 self.kick_counter += 1
+                with open("kick_counter.txt", "w") as f:
+                    f.write(str(self.kick_counter))
                 return_msg = "Kicked user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
