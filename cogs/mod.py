@@ -127,6 +127,12 @@ class Mod(commands.Cog):
             if author.top_role.position < member.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
+                try:
+                    await member.send("You have been kicked from {}. The reason given was: `{}`. You may rejoin the server any time you wish.".format(
+                        self.bot.main_server.name, reason))
+                except discord.Forbidden:
+                    # DMs disabled by user
+                    pass
                 await member.kick(reason=reason)
                 self.kick_counter += 1
                 return_msg = "Kicked user: {}".format(member.mention)
@@ -151,6 +157,12 @@ class Mod(commands.Cog):
             if author.top_role.position < member.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
+                try:
+                    await member.send("You have been banned from {}. The reason given was: `{}`.".format(
+                            self.bot.main_server.name, reason))
+                except discord.Forbidden:
+                    # DMs disabled by user
+                    pass
                 await member.ban(reason=reason, delete_message_days=0)
                 return_msg = "Banned user: {}".format(member.mention)
                 if reason:
