@@ -13,7 +13,7 @@ class Assignables(commands.Cog):
         if not ctx.channel.id == 429185857346338827:
             await ctx.message.delete()
             try:
-                await ctx.author.send("This command can only be used in <#429185857346338827>. Please move there.
+                await ctx.author.send("This command can only be used in <#429185857346338827>. Please move there.")
             except discord.Forbidden:
                 pass
             return
