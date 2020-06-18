@@ -132,6 +132,7 @@ class Mod(commands.Cog):
                 return_msg = "Kicked user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
+                    embed.add_field(name="Reason", value=reason)
                 return_msg += "."
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
@@ -154,6 +155,7 @@ class Mod(commands.Cog):
                 return_msg = "Banned user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
+                    embed.add_field(name="Reason", value=reason)
                 return_msg += "."
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
