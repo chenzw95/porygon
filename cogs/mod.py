@@ -20,6 +20,7 @@ class Mod(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
+        self.kick_counter = 4  # Current count as of addition
 
     def __unload(self):
         self.expiry_task.cancel()
@@ -127,6 +128,7 @@ class Mod(commands.Cog):
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
                 await member.kick(reason=reason)
+                self.kick_counter += 1
                 return_msg = "Kicked user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
