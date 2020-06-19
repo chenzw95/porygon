@@ -145,7 +145,7 @@ class Mod(commands.Cog):
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
                 try:
-                    await member.send("You have been kicked from {}. The reason given was: `{}`. You may rejoin the server any time you wish.".format(
+                    await member.send("You have been kicked from {}. The reason given was: `{}`. You may rejoin the server any time you wish: https://discord.gg/tDMvSRv".format(
                         self.bot.main_server.name, reason))
                 except discord.Forbidden:
                     # DMs disabled by user
