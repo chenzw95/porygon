@@ -92,6 +92,19 @@ class Mod(commands.Cog):
         embed.add_field(name="Mention", value=member.mention, inline=False)
         await self.bot.modlog_channel.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        embed = discord.Embed(color=discord.Color.blue(), timestamp=datetime.utcnow())
+        member = message.author
+        embed.title = "🗑️ Message deleted"
+        embed.add_field(name="Author", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
+        embed.add_field(name="Mention", value=member.mention, inline=False)
+        embed.add_field(name="Content", value="`{}`".format(message.clean_content))
+        embed.add_field(name="Message created", value=message.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
+        if message.edited_at:
+            embed.add_field(name="Message edited", value=message.edited_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
+        await self.bot.modlog_channel.send(embed=embed)
+
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
     @commands.has_any_role("Moderators")
