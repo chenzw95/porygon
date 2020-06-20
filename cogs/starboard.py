@@ -113,13 +113,13 @@ class Starboard(commands.Cog):
     async def on_reaction_add(self, reaction, user):
         if str(reaction.emoji) != '⭐':
             return
-        await self.update_db(reaction.message,1)
+        await self.update_db(reaction.message, 1)
 
     @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
         if str(reaction.emoji) != '⭐':
             return
-        await self.update_db(reaction.message,-1)
+        await self.update_db(reaction.message, -1)
 
     def get_star_reaction_count(self, message):
         reactions = message.reactions
@@ -140,6 +140,6 @@ class Starboard(commands.Cog):
             data = json.dump(self.bot.config, conf, indent=4)
         await ctx.send("Messages now require {0} star(s) to show up in the starboard.".format(stars))
 
+
 def setup(bot):
     bot.add_cog(Starboard(bot))
-        
