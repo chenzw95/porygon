@@ -1,5 +1,6 @@
 import asyncio
 import discord
+import typing
 import json
 from discord.ext import commands
 
@@ -143,6 +144,43 @@ class Starboard(commands.Cog):
         with open('config.json', 'w') as conf:
             data = json.dump(self.bot.config, conf, indent=4)
         await ctx.send("Messages now require {0} star(s) to show up in the starboard.".format(stars))
+
+    @commands.command(name='deletestar', aliases=['delstar'])
+    @commands.has_any_role("aww", "Moderators")
+    async def deletestar(self, ctx, message_id, clear_stars: typing.Optional[bool] = True):
+        async with self.bot.engine.acquire() as conn:
+            query = starboard_tbl.select().where(starboard_tbl.c.message_id == message_id)
+            result = await conn.execute(query)
+            row = await result.fetchone()
+            if row:
+                original_channel = self.bot.main_server.get_channel(row['channel_id'])
+                try:
+                    original_message = await original_channel.fetch_message(row['message_id'])
+                except discord.NotFound:
+                    original_message = None
+                starboard_message = await self.bot.starboard_channel.fetch_message(row['starboard_id'])
+                if clear_stars:
+                    try:
+                        if original_message:
+                            await original_message.clear_reaction("⭐")
+                        await starboard_message.clear_reaction("⭐")
+                    except discord.NotFound:
+                        pass
+                embed = discord.Embed(color=discord.Color.orange(), timestamp=ctx.message.created_at)
+                embed.title = "<:nostar:723763060321550407> Message un-starred"
+                embed.add_field(name="Original message", value="`{}`".format(starboard_message.embeds[0].description))
+                if original_message:
+                    context_link = original_message.jump_url
+                else:
+                    context_link = "*original message deleted*"
+                embed.add_field(name="Context", value="{}".format(context_link))
+                embed.add_field(name="Un-starred by", value=ctx.author.name)
+                await self.bot.modlog_channel.send(embed=embed)
+                await conn.execute(starboard_tbl.delete().where(starboard_tbl.c.message_id == row['message_id']))
+                await starboard_message.delete()
+                return await ctx.send("✅ Message `{}` removed from starboard.".format(row['message_id']))
+            else:
+                return await ctx.send("❌ Message not found in starboard.")
 
 
 def setup(bot):
