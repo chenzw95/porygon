@@ -111,12 +111,16 @@ class Starboard(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
+        if reaction.message.type != discord.MessageType.default:
+            return
         if str(reaction.emoji) != '⭐':
             return
         await self.update_db(reaction.message, 1)
 
     @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
+        if reaction.message.type != discord.MessageType.default:
+            return
         if str(reaction.emoji) != '⭐':
             return
         await self.update_db(reaction.message, -1)
