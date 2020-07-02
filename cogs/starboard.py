@@ -2,6 +2,7 @@ import asyncio
 import discord
 import typing
 import json
+import weakref
 from discord.ext import commands
 
 from database import config_tbl, starboard_tbl
@@ -14,6 +15,7 @@ class Starboard(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._message_cache = {}
+        self._star_queue = weakref.WeakValueDictionary()
 
     def star_gradient_colour(self, stars):
         p = stars / 13
@@ -116,7 +118,12 @@ class Starboard(commands.Cog):
             return
         if str(reaction.emoji) != '⭐':
             return
-        await self.update_db(reaction.message, 1)
+        star_lock = self._star_queue.get(reaction.message.id)
+        if star_lock is None:
+            self._star_queue[reaction.message.id] = asyncio.Lock(loop=self.bot.loop)
+            star_lock = self._star_queue[reaction.message.id]
+            async with star_lock:
+                await self.update_db(reaction.message, 1)
 
     @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
@@ -124,7 +131,12 @@ class Starboard(commands.Cog):
             return
         if str(reaction.emoji) != '⭐':
             return
-        await self.update_db(reaction.message, -1)
+        star_lock = self._star_queue.get(reaction.message.id)
+        if star_lock is None:
+            self._star_queue[reaction.message.id] = asyncio.Lock(loop=self.bot.loop)
+            star_lock = self._star_queue[reaction.message.id]
+            async with star_lock:
+                await self.update_db(reaction.message, -1)
 
     def get_star_reaction_count(self, message):
         reactions = message.reactions
