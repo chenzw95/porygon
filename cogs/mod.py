@@ -179,7 +179,7 @@ class Mod(commands.Cog):
             else:
                 try:
                     await member.send("You have been banned from {}. The reason given was: `{}`.".format(
-                            self.bot.main_server.name, reason))
+                        self.bot.main_server.name, reason))
                 except discord.Forbidden:
                     # DMs disabled by user
                     pass

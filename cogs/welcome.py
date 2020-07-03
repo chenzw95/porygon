@@ -10,8 +10,8 @@ class Welcome(commands.Cog):
     async def on_member_join(self, user):
         welcome = discord.Embed(color=discord.Color.gold())
         welcome.title = "Welcome to the PKHeX Development Projects server, {}!".format(user.name)
-        welcome.description = "Don't forget to read #rules and #announcements. Also if you are interested in the `@PluginsUpdates` or `@SysBotUpdates` or `@PKHeXUpdates` or `@NHSEUpdates` role, use the !toggleplugins / !togglesysbot / !togglepkhex / !togglenhse commands respectively to get notifications on the latest news or builds!"
-        await self.bot.welcome_channel.send(user.mention,embed=welcome)
+        welcome.description = "Don't forget to read #rules and #announcements. Also if you are interested in the `@PluginsUpdates`, `@SysBotUpdates`, `@PKHeXUpdates` or `@NHSEUpdates` role, use the `!toggleplugins`, `!togglesysbot`, `!togglepkhex`, or `!togglenhse` commands respectively to get notifications on the latest news or builds!"
+        await self.bot.welcome_channel.send(user.mention, embed=welcome)
 
      
 def setup(bot):
