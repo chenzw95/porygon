@@ -33,7 +33,7 @@ class Assignables(commands.Cog):
             
     @commands.command(name='togglesysbot')
     async def sysbotupdates(self, ctx):
-        """Toggles the BuildUpdates role"""
+        """Toggles the SysBotUpdates role"""
         if not ctx.channel.id == 429185857346338827:
             await ctx.message.delete()
             try:
