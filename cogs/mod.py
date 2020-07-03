@@ -20,7 +20,11 @@ class Mod(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
-        self.kick_counter = 4  # Current count as of addition
+        with open("kick_counter.txt", "r") as f:
+            try:
+                self.kick_counter = int(f.read())
+            except ValueError:
+                self.kick_counter = 0
 
     def __unload(self):
         self.expiry_task.cancel()
@@ -88,6 +92,20 @@ class Mod(commands.Cog):
         embed.add_field(name="Mention", value=member.mention, inline=False)
         await self.bot.modlog_channel.send(embed=embed)
 
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        embed = discord.Embed(color=discord.Color.blue(), timestamp=datetime.utcnow())
+        member = message.author
+        embed.title = "🗑️ Message deleted"
+        embed.add_field(name="Author", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
+        embed.add_field(name="Mention", value=member.mention, inline=False)
+        embed.add_field(name="Content", value="`{}`".format(message.clean_content))
+        embed.add_field(name="Channel", value="{} ({})".format(message.channel.mention, message.channel.id))
+        embed.add_field(name="Message created", value=message.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
+        if message.edited_at:
+            embed.add_field(name="Message edited", value=message.edited_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
+        await self.bot.modlog_channel.send(embed=embed)
+
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
     @commands.has_any_role("Moderators")
@@ -127,11 +145,20 @@ class Mod(commands.Cog):
             if author.top_role.position < member.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
+                try:
+                    await member.send("You have been kicked from {}. The reason given was: `{}`. You may rejoin the server any time you wish: https://discord.gg/tDMvSRv".format(
+                        self.bot.main_server.name, reason))
+                except discord.Forbidden:
+                    # DMs disabled by user
+                    pass
                 await member.kick(reason=reason)
                 self.kick_counter += 1
+                with open("kick_counter.txt", "w") as f:
+                    f.write(str(self.kick_counter))
                 return_msg = "Kicked user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
+                    embed.add_field(name="Reason", value=reason)
                 return_msg += "."
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
@@ -150,10 +177,17 @@ class Mod(commands.Cog):
             if author.top_role.position < member.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
+                try:
+                    await member.send("You have been banned from {}. The reason given was: `{}`.".format(
+                        self.bot.main_server.name, reason))
+                except discord.Forbidden:
+                    # DMs disabled by user
+                    pass
                 await member.ban(reason=reason, delete_message_days=0)
                 return_msg = "Banned user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
+                    embed.add_field(name="Reason", value=reason)
                 return_msg += "."
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
