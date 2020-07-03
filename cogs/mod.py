@@ -100,6 +100,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Author", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
         embed.add_field(name="Mention", value=member.mention, inline=False)
         embed.add_field(name="Content", value="`{}`".format(message.clean_content))
+        embed.add_field(name="Channel", value="{} ({})".format(message.channel.mention, message.channel.id))
         embed.add_field(name="Message created", value=message.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         if message.edited_at:
             embed.add_field(name="Message edited", value=message.edited_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
