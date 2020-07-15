@@ -146,8 +146,8 @@ class Starboard(commands.Cog):
         return 0
 
     @commands.command(name='starboardcount', aliases=['starcount'])
-    @commands.has_any_role("aww", "Moderators")
-    async def starboardcount(self, ctx, stars):
+    @commands.has_any_role("Moderators")
+    async def starboardcount(self, ctx, stars: int):
         """Modifies the amount of stars needed to add to starboard"""
         stars = int(stars)
         if stars == 0:
