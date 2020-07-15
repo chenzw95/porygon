@@ -149,8 +149,7 @@ class Starboard(commands.Cog):
     @commands.has_any_role("Moderators")
     async def starboardcount(self, ctx, stars: int):
         """Modifies the amount of stars needed to add to starboard"""
-        stars = int(stars)
-        if stars == 0:
+        if stars <= 0:
             stars = 1
         self.bot.config['star_count'] = stars
         with open('config.json', 'w') as conf:
