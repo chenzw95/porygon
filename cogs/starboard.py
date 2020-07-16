@@ -7,6 +7,7 @@ from discord.ext import commands
 
 from database import config_tbl, starboard_tbl
 
+
 class Starboard(commands.Cog):
     """
     Adds stuff to the starboard
@@ -52,7 +53,7 @@ class Starboard(commands.Cog):
                 embed.set_image(url=file.url)
             else:
                 embed.add_field(name='Attachment', value='[{0}]({1})'.format(file.filename, file.url), inline=False)
-        
+
         embed.add_field(name='Context', value='[Jump!]({0})'.format(message.jump_url), inline=False)
         embed.set_author(name=message.author.display_name, icon_url=message.author.avatar_url_as(format='png'))
         embed.timestamp = message.created_at
@@ -76,7 +77,7 @@ class Starboard(commands.Cog):
                 return msg
             except Exception:
                 return None
-    
+
     async def update_db(self, message, add_value):
         async with self.bot.engine.acquire() as conn:
             starboard = False
@@ -95,12 +96,12 @@ class Starboard(commands.Cog):
                     message = await self.get_message(self.bot.main_server.get_channel(row_vals[4]), row_vals[0])
                 content, embed = self.get_emoji_message(message, add_value + row_vals[2])
                 starboard_message = await self.get_message(self.bot.starboard_channel, row_vals[3])
-                if add_value + row_vals[2] > 0: 
-                    query = starboard_tbl.update().where(starboard_tbl.c.message_id == row_vals[0]).values(star_count= add_value + row_vals[2])
+                if add_value + row_vals[2] > 0:
+                    query = starboard_tbl.update().where(starboard_tbl.c.message_id == row_vals[0]).values(star_count=add_value + row_vals[2])
                 else:
                     query = starboard_tbl.delete().where(starboard_tbl.c.message_id == row_vals[0])
                 await conn.execute(query)
-                if add_value + row_vals[2] >0:
+                if add_value + row_vals[2] > 0:
                     await starboard_message.edit(content=content, embed=embed)
                 else:
                     await starboard_message.delete()
@@ -147,10 +148,9 @@ class Starboard(commands.Cog):
 
     @commands.command(name='starboardcount', aliases=['starcount'])
     @commands.has_any_role("aww", "Moderators")
-    async def starboardcount(self, ctx, stars):
+    async def starboardcount(self, ctx, stars: int):
         """Modifies the amount of stars needed to add to starboard"""
-        stars = int(stars)
-        if stars == 0:
+        if stars <= 0:
             stars = 1
         self.bot.config['star_count'] = stars
         with open('config.json', 'w') as conf:
