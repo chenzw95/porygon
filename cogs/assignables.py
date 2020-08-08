@@ -127,7 +127,30 @@ class Assignables(commands.Cog):
             embed.title = "Removed the weeb role"
             await ctx.send("{} : Removed the weeb role! You will no longer be able to access the weeb-spoilers channel!".format(ctx.author.mention))
             await self.bot.modlog_channel.send(embed=embed)
-
+            
+    @commands.command(name='togglemovies')
+    async def moviesrole(self, ctx):
+        """Toggles the Movie Nights! role"""
+        if not ctx.channel.id == 429185857346338827:
+            await ctx.message.delete()
+            try:
+                await ctx.author.send("This command can only be used in <#429185857346338827>. Please move there.")
+            except discord.Forbidden:
+                pass
+            return
+        burole = discord.utils.get(ctx.guild.roles, name="Movie Nights!")
+        embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
+        embed.add_field(name="User", value=ctx.message.author.mention)
+        if burole not in ctx.author.roles:
+            await ctx.author.add_roles(burole)
+            embed.title = "Added the Movie Nights! role"
+            await ctx.send("{} : Added the Movie Nights! role! You will be notified of community movie nights!".format(ctx.author.mention))
+            await self.bot.modlog_channel.send(embed=embed)
+        else:
+            await ctx.author.remove_roles(burole)
+            embed.title = "Removed the Movie Nights! role"
+            await ctx.send("{} : Removed the Movie Nights! role! You will no longer be notified of community movie nights!".format(ctx.author.mention))
+            await self.bot.modlog_channel.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Assignables(bot))
