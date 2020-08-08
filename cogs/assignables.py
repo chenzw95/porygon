@@ -130,7 +130,7 @@ class Assignables(commands.Cog):
             
     @commands.command(name='togglemovies')
     async def moviesrole(self, ctx):
-        """Toggles the weeb role"""
+        """Toggles the Movie Nights! role"""
         if not ctx.channel.id == 429185857346338827:
             await ctx.message.delete()
             try:
