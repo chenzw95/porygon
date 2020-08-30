@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import BucketType
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy import null
 
@@ -265,6 +266,11 @@ class Mod(commands.Cog):
         embed.add_field(name="Member", value=member.mention).add_field(name="Member ID", value=member.id)
         embed.add_field(name="Action taken by", value=ctx.author.name)
         await self.bot.modlog_channel.send(embed=embed)
+
+    @commands.command()
+    @commands.cooldown(rate=3, per=15.0, type=BucketType.user)
+    async def report(self, ctx):
+        await ctx.send("This incident has been reported to the proper authorities. Thank you for your time.")
 
     @kick.error
     @ban.error
