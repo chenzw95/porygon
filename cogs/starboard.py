@@ -194,6 +194,20 @@ class Starboard(commands.Cog):
             else:
                 return await ctx.send("❌ Message not found in starboard.")
 
+    @commands.command(name='checkmsgstars', aliases=['chkstar'])
+    @commands.has_any_role("aww", "Moderators", "Nitro Booster")
+    @commands.cooldown(rate=1, per=30.0, type=commands.BucketType.guild)
+    async def checkmsgstars(self, ctx, message_id: int):
+        """Checks the provided message's star count. Use in same channel as message. 30 second cooldown"""
+        try:
+            message = ctx.channel.fetch_message(message_id)
+        except discord.NotFound:
+            return await ctx.send("Could not find the provided message. Are you sure that message is in this channel?")
+        for reaction in message.reactions:
+            if str(reaction.emoji) != '⭐':
+                continue
+            return await self.update_db(reaction.message, reaction.count)
+
 
 def setup(bot):
     bot.add_cog(Starboard(bot))

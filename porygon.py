@@ -94,6 +94,8 @@ if __name__ == "__main__":
             await ctx.send("{} You are missing required arguments.".format(ctx.message.author.mention))
         elif isinstance(error, commands.BotMissingPermissions):
             await ctx.send("⚠ I don't have the permissions to do this.")
+        elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
+            await ctx.send("{} This command is on a cooldown.".format(ctx.author.mention))
         else:
             if ctx.command:
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
