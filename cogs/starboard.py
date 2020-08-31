@@ -206,7 +206,9 @@ class Starboard(commands.Cog):
         for reaction in message.reactions:
             if str(reaction.emoji) != '⭐':
                 continue
-            return await self.update_db(reaction.message, reaction.count)
+            await self.update_db(reaction.message, reaction.count)
+            return
+        await ctx.send("That message has no stars!")
 
 
 def setup(bot):
