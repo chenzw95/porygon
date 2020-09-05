@@ -110,11 +110,11 @@ class Mod(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         banlist = [
-            "heres link: https://libra-sale.io and tweet: https://imgpile.com/i/uJZY82",
-            "heres tweet: https://imgpile.com/i/uPh7b3 and link: https://ethway.io"
+            r".*heres link: https://libra-sale.io and tweet: https://imgpile.com/i/.*",
+            r".*heres tweet: https://imgpile.com/i/.* and link: https://ethway.io.*"
         ]
         for ban in banlist:
-            if ban in message.content:
+            if re.match(ban, message.content):
                 author = message.author
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
