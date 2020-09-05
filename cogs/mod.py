@@ -106,6 +106,19 @@ class Mod(commands.Cog):
         if message.edited_at:
             embed.add_field(name="Message edited", value=message.edited_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         await self.bot.modlog_channel.send(embed=embed)
+        
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        banlist = [
+            "heres link: https://libra-sale.io and tweet: https://imgpile.com/i/uJZY82",
+            "heres tweet: https://imgpile.com/i/uPh7b3 and link: https://ethway.io"
+        ]
+        for ban in banlist:
+            if ban in message.content:
+                author = message.author
+                if len(author.roles) == 1:
+                    await author.ban(reason="Banlisted quote", delete_message_days=1)
+                    await self.bot.modlog_channel.send("Banned user : {} for the following message: {}".format(author.mention, message.content))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
