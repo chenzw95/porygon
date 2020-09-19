@@ -88,7 +88,7 @@ class Assignables(commands.Cog):
 
     @commands.command(name='togglegames')
     async def gamesrole(self, ctx):
-        """Toggles the Movie Nights! role"""
+        """Toggles the Community Games role"""
         role_on = await self.handletoggle(self, ctx, "Community Games")
         if role_on == 0:
             await ctx.send("{} : Added the Community Games role! You will now be notified of community games!".format(ctx.author.mention))
