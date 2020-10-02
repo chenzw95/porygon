@@ -55,11 +55,11 @@ class Faq(commands.Cog):
                 return await ctx.send("❌ Canceled by user.")
         except asyncio.TimeoutError:
             return await ctx.send("🚫 Timed out while waiting for a response, aborting.")
-        if len("❔ QX. __{}__\n{}".format(question.clean_content, answer.clean_content)) > 1950:
+        if len("❔ QX. __{}__\n{}".format(question.content, answer.content)) > 1950:
             return await ctx.send("⚠ This FAQ entry is too long.")
         with open("faq.json", "r") as f:
             faq_db = json.load(f)
-        faq_db.append([question.clean_content, answer.clean_content])
+        faq_db.append([question.content, answer.content])
         with open("faq.json", "w") as f:
             json.dump(faq_db, f, indent=4)
         await ctx.send("✅ Entry added.")
@@ -101,9 +101,9 @@ class Faq(commands.Cog):
         if new_content.content == "abort-{:04d}".format(random_num):
             return await ctx.send("❌ Canceled by user.")
         if edit_type[0] == "q":
-            faq_db[faq_id - 1][0] = new_content.clean_content
+            faq_db[faq_id - 1][0] = new_content.content
         elif edit_type[0] == "a":
-            faq_db[faq_id - 1][1] = new_content.clean_content
+            faq_db[faq_id - 1][1] = new_content.content
         with open("faq.json", "w") as f:
             json.dump(faq_db, f, indent=4)
         await ctx.send("✅ Entry modified.")
