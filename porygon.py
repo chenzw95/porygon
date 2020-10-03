@@ -44,9 +44,12 @@ if __name__ == "__main__":
     except FileNotFoundError:
         logger.critical("Config file not found, quitting!")
         sys.exit(-1)
+    intents = discord.Intents.default()
+    intents.members = True
     bot = commands.Bot(command_prefix=config['prefix'],
                        description='Porygon',
-                       max_messages=100)
+                       max_messages=100,
+                       intents=intents)
     bot.config = config
     bot.is_setup = asyncio.Event(loop=bot.loop)
 
