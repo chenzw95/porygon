@@ -123,8 +123,8 @@ class Starboard(commands.Cog):
         if star_lock is None:
             star_lock = asyncio.Lock(loop=self.bot.loop)
             self._star_queue[reaction.message.id] = star_lock
-            async with star_lock:
-                await self.update_db(reaction.message, 1)
+        async with star_lock:
+            await self.update_db(reaction.message, 1)
 
     @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
@@ -136,8 +136,8 @@ class Starboard(commands.Cog):
         if star_lock is None:
             star_lock = asyncio.Lock(loop=self.bot.loop)
             self._star_queue[reaction.message.id] = star_lock
-            async with star_lock:
-                await self.update_db(reaction.message, -1)
+        async with star_lock:
+            await self.update_db(reaction.message, -1)
 
     def get_star_reaction_count(self, message):
         reactions = message.reactions
