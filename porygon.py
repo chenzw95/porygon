@@ -48,7 +48,7 @@ if __name__ == "__main__":
     intents.members = True
     bot = commands.Bot(command_prefix=config['prefix'],
                        description='Porygon',
-                       max_messages=100,
+                       max_messages=1000,
                        intents=intents)
     bot.config = config
     bot.is_setup = asyncio.Event(loop=bot.loop)
