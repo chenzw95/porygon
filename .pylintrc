@@ -68,25 +68,24 @@ confidence=
 disable=fixme,
     duplicate-code,
     too-many-lines,
-    too-many-branches,
-    too-many-locals,
-    too-many-nested-blocks,
     too-many-statements,
     too-many-instance-attributes,
     too-many-arguments,
     too-many-public-methods,
     too-few-public-methods,
-    too-many-ancestors,
     logging-format-interpolation,
     logging-fstring-interpolation,
     logging-not-lazy,
     no-else-return,
     unnecessary-pass,
+    missing-class-docstring,
     missing-function-docstring,
     missing-module-docstring,
     protected-access,
     line-too-long,
-    spelling
+    spelling,
+    unused-argument,
+    no-self-use
 
 
 [REPORTS]
@@ -120,7 +119,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_,logger,c,e,f,n,m,r,q
+good-names=i,j,k,ex,Run,_,logger,c,e,f,n,m,o,p,r,q
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -323,7 +322,7 @@ init-import=no
 
 # A regular expression matching the name of dummy variables (i.e. expectedly
 # not used).
-dummy-variables-rgx=(_+[a-zA-Z0-9]*?$)|dummy|ctx
+dummy-variables-rgx=(_+[a-zA-Z0-9]*?$)|dummy
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid to define new builtins when possible.

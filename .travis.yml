@@ -1,0 +1,18 @@
+notifications:
+  email: false
+
+language: python
+cache:
+  pip: true
+
+os: linux
+python:
+  - "3.7"
+  - "3.8"
+
+install:
+  - pip install -U -r requirements.txt
+  - pip install -U pylint
+
+script:
+  - pylint -rn $(pwd)
