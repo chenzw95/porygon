@@ -1,11 +1,12 @@
+# pylint: disable=no-value-for-parameter
 import asyncio
-import discord
 import typing
 import json
 import weakref
+import discord
 from discord.ext import commands
 
-from database import config_tbl, starboard_tbl
+from database import starboard_tbl
 
 
 class Starboard(commands.Cog):
@@ -19,6 +20,7 @@ class Starboard(commands.Cog):
         self._star_queue = weakref.WeakValueDictionary()
 
     def star_gradient_colour(self, stars):
+        # pylint: disable=invalid-name
         p = stars / 13
         if p > 1.0:
             p = 1.0
@@ -66,7 +68,6 @@ class Starboard(commands.Cog):
         except KeyError:
             try:
                 o = discord.Object(id=message_id + 1)
-                pred = lambda m: m.id == message_id
                 # don't wanna use get_message due to poor rate limit (1/1s) vs (50/1s)
                 msg = await channel.history(limit=1, before=o).next()
 
@@ -75,7 +76,7 @@ class Starboard(commands.Cog):
 
                 self._message_cache[message_id] = msg
                 return msg
-            except Exception:
+            except discord.HTTPException:
                 return None
 
     async def update_db(self, message, add_value):
@@ -154,7 +155,7 @@ class Starboard(commands.Cog):
             stars = 1
         self.bot.config['star_count'] = stars
         with open('config.json', 'w') as conf:
-            data = json.dump(self.bot.config, conf, indent=4)
+            json.dump(self.bot.config, conf, indent=4)
         await ctx.send("Messages now require {0} star(s) to show up in the starboard.".format(stars))
 
     @commands.command(name='deletestar', aliases=['delstar'])

@@ -1,25 +1,14 @@
+import io
 import logging
-import discord
-import pkg_resources
-import contextlib
-import sys
-import inspect
 import os
-import shutil
-import glob
-import math
 import textwrap
-from discord.ext import commands
-from io import StringIO
-from traceback import format_exc
-from cogs.utils.checks import *
 from contextlib import redirect_stdout
-
+import discord
 from discord.ext import commands
 from .utils import checks
 
 # Common imports that can be used by the debugger.
-import os
+# pylint: disable=unused-import, wrong-import-order
 import requests
 import json
 import gc
@@ -28,14 +17,18 @@ import time
 import traceback
 import prettytable
 import re
-import io
 import asyncio
-import discord
 import random
 import subprocess
 from bs4 import BeautifulSoup
 import urllib
 import psutil
+import shutil
+import glob
+import math
+import pkg_resources
+import sys
+import inspect
 
 
 class Debug(commands.Cog):
@@ -56,7 +49,7 @@ class Debug(commands.Cog):
                 setattr(self.bot, "{}_channel".format(channel), self.bot.main_server.get_channel(cid))
             for role, roleid in config['roles'].items():
                 setattr(self.bot, "{}_role".format(role), discord.utils.get(self.bot.main_server.roles, id=roleid))
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
             self.logger.exception(e)
         await ctx.send("✅ Configuration reloaded.")
@@ -70,7 +63,7 @@ class Debug(commands.Cog):
             self.bot.unload_extension(module)
             self.bot.load_extension(module)
             await ctx.send("✅ Extension reloaded.")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
             self.logger.exception(e)
 
@@ -82,7 +75,7 @@ class Debug(commands.Cog):
         try:
             self.bot.load_extension(module)
             await ctx.send("✅ Extension loaded.")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
             self.logger.exception(e)
 
@@ -96,7 +89,7 @@ class Debug(commands.Cog):
         try:
             self.bot.unload_extension(module)
             await ctx.send("✅ Extension unloaded.")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
             self.logger.exception(e)
 
@@ -152,8 +145,9 @@ class Debug(commands.Cog):
         # remove `foo`
         return content.strip('` \n')
 
-    # Executes/evaluates code.Pretty much the same as Rapptz implementation for RoboDanny with slight variations.
     async def interpreter(self, env, code, ctx):
+        # Executes/evaluates code. Pretty much the same as Rapptz implementation for RoboDanny with slight variations.
+        # pylint: disable=bare-except, broad-except, eval-used
         body = self.cleanup_code(code)
         stdout = io.StringIO()
 
@@ -164,7 +158,7 @@ class Debug(commands.Cog):
         to_compile = 'async def func():\n{}'.format(textwrap.indent(body, "  "))
 
         try:
-            exec(to_compile, env)
+            exec(to_compile, env)  # pylint: disable=exec-used
         except Exception as e:
             return await ctx.send('```\n{}: {}\n```'.format(e.__class__.__name__, e))
 
@@ -201,7 +195,7 @@ class Debug(commands.Cog):
 
     @commands.group(pass_context=True, invoke_without_command=True)
     @checks.check_permissions_or_owner(administrator=True)
-    async def py(self, ctx, *, msg):
+    async def py(self, ctx, *, msg):  # pylint: disable=invalid-name
         """Python interpreter. See the wiki for more info."""
 
         if ctx.invoked_subcommand is None:
