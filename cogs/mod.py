@@ -39,6 +39,8 @@ class Mod(commands.Cog):
                     )
                     async for row in conn.execute(query):
                         member = self.bot.main_server.get_member(row.user)
+                        if member is not None:
+                            await member.remove_roles(getattr(self.bot, "{}_role".format(row.type), None))
                         embed = discord.Embed(color=discord.Color.dark_orange(), timestamp=now_datetime)
                         embed.title = "🕛 Restriction expired"
                         if member is not None:
