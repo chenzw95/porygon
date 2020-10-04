@@ -13,7 +13,7 @@ from discord.ext import commands
 from cogs.utils import checks
 
 
-def initLogging():
+def init_logging():
     logformat = "%(asctime)s %(name)s:%(levelname)s:%(message)s"
     logging.basicConfig(level=logging.INFO, format=logformat,
                         datefmt='%Y-%m-%d %H:%M:%S')
@@ -21,14 +21,14 @@ def initLogging():
     return logging.getLogger("porygon")
 
 
-def sig_handler(signum, frame):
+def sig_handler(signum, frame):  # pylint: disable=unused-argument
     logger.info("Exiting...")
     # logger.shutdown()
     sys.exit()
 
 
 if __name__ == "__main__":
-    logger = initLogging()
+    logger = init_logging()
     logger.info("Initializing...")
     signal.signal(signal.SIGTERM, sig_handler)
     signal.signal(signal.SIGINT, sig_handler)
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         if extension.endswith('.py') and extension != "__init__.py" and "_alt" not in extension:
             try:
                 bot.load_extension("cogs." + extension[:-3])
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 logger.exception('Failed to load extension {}'.format(extension))
 
     try:
