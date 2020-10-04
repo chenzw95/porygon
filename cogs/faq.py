@@ -6,8 +6,6 @@ import random
 import discord
 from discord.ext import commands
 
-from .utils import checks
-
 
 class Faq(commands.Cog):
     def __init__(self, bot):
@@ -18,9 +16,9 @@ class Faq(commands.Cog):
         with open("faq.json", "r") as f:
             faq_db = json.load(f)
         messages = []
-        for id, entry in enumerate(faq_db, start=1):
+        for faq_id, entry in enumerate(faq_db, start=1):
             embed = discord.Embed(color=discord.Color.red())
-            embed.title = "Q{}. {}".format(id, entry[0])
+            embed.title = "Q{}. {}".format(faq_id, entry[0])
             embed.description = entry[1]
             messages.append(embed)
         counter = 0
