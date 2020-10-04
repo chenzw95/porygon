@@ -25,7 +25,7 @@ class Mod(commands.Cog):
             except ValueError:
                 self.kick_counter = 0
 
-    def __unload(self):
+    def cog_unload(self):
         self.expiry_task.cancel()
 
     async def check_expiry(self):
