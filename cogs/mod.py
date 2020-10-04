@@ -1,9 +1,7 @@
+# pylint: disable=no-value-for-parameter
 import asyncio
-import copy
-import json
 import logging
 import re
-import time
 from datetime import datetime, timedelta
 
 import discord
@@ -12,8 +10,8 @@ from discord.ext.commands import BucketType
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy import null
 
-from .utils import checks
 from database import restrictions_tbl
+from .utils import checks
 
 
 class Mod(commands.Cog):
@@ -50,7 +48,7 @@ class Mod(commands.Cog):
                         await self.bot.modlog_channel.send(embed=embed)
                         delete_stmt = restrictions_tbl.delete().where(restrictions_tbl.c.id == row.id)
                         await conn.execute(delete_stmt)
-            except Exception as e:
+            except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Something went wrong:")
             finally:
                 await asyncio.sleep(1)
@@ -76,7 +74,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         async with self.bot.engine.acquire() as conn:
             query = restrictions_tbl.select().where((restrictions_tbl.c.user == member.id) & ((restrictions_tbl.c.expiry > datetime.utcnow()) |
-                                                                                              (restrictions_tbl.c.expiry == None)))
+                                                                                              (restrictions_tbl.c.expiry == None)))  # pylint: disable=singleton-comparison
             re_add = []
             async for row in conn.execute(query):
                 re_add.append(getattr(self.bot, "{}_role".format(row.type), None))
@@ -106,7 +104,7 @@ class Mod(commands.Cog):
         if message.edited_at:
             embed.add_field(name="Message edited", value=message.edited_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         await self.bot.modlog_channel.send(embed=embed)
-        
+
     @commands.Cog.listener()
     async def on_message(self, message):
         banlist = [

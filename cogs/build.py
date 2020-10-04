@@ -21,10 +21,10 @@ class BuildCog(commands.Cog):
         if mgdb_commit:
             return await ctx.send("🚫 MGDB Downloader behaviour is no longer determined at compile-time.")
         async with ctx.typing():
-            headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
-            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
-            async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
-                                    json=reqBody) as resp:
+            header_dict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
+            req_body = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
+            async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=header_dict,
+                                    json=req_body) as resp:
                 if resp.status == 200:
                     await ctx.message.add_reaction("✅")
                     embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
@@ -47,13 +47,13 @@ class BuildCog(commands.Cog):
         if mgdb_commit:
             return await ctx.send("🚫 MGDB Downloader behaviour is no longer determined at compile-time.")
         async with ctx.typing():
-            headerDict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
+            header_dict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
                           'Content-Type': 'application/json'}
-            reqBody = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
-            envVars = {"notifyall": "false"}
-            reqBody["environmentVariables"] = envVars
-            async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=headerDict,
-                                    json=reqBody) as resp:
+            req_body = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
+            env_vars = {"notifyall": "false"}
+            req_body["environmentVariables"] = env_vars
+            async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=header_dict,
+                                    json=req_body) as resp:
                 if resp.status == 200:
                     await ctx.message.add_reaction("✅")
                     embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
@@ -66,7 +66,7 @@ class BuildCog(commands.Cog):
                     await ctx.send("⚠️ Request failed. Details have been logged to console.")
         check = lambda m: m.channel == self.bot.builds_channel and m.author.name == "BuildBot" and m.author.discriminator == "0000"
         try:
-            build_result = await self.bot.wait_for('message', check=check, timeout=300.0)
+            await self.bot.wait_for('message', check=check, timeout=300.0)
         except asyncio.TimeoutError:
             return await ctx.send("⚠ Failed to read build notification from AppVeyor.")
         try:
