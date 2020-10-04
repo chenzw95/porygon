@@ -35,7 +35,7 @@ class Assignables(commands.Cog):
     @commands.command(name='toggleplugins', aliases=['buildupdates'])
     async def buildupdates(self, ctx):
         """Toggles the PluginsUpdates role"""
-        role_on = await self.handletoggle(self, ctx, "PluginsUpdates")
+        role_on = await self.handletoggle(ctx, "PluginsUpdates")
         if role_on == 0:
             await ctx.send("{} : Added Plugin Updates role! You will now be notified from now on when a new plugin build is released!".format(ctx.author.mention))
         elif role_on == 1:
@@ -44,7 +44,7 @@ class Assignables(commands.Cog):
     @commands.command(name='togglesysbot')
     async def sysbotupdates(self, ctx):
         """Toggles the SysBotUpdates role"""
-        role_on = await self.handletoggle(self, ctx, "SysBotUpdates")
+        role_on = await self.handletoggle(ctx, "SysBotUpdates")
         if role_on == 0:
             await ctx.send("{} : Added SysBot Updates role! You will now be notified of any major SysBot news from now on!".format(ctx.author.mention))
         elif role_on == 1:
@@ -53,7 +53,7 @@ class Assignables(commands.Cog):
     @commands.command(name='togglenhse')
     async def nhseupdates(self, ctx):
         """Toggles the NHSEUpdates role"""
-        role_on = await self.handletoggle(self, ctx, "NHSEUpdates")
+        role_on = await self.handletoggle(ctx, "NHSEUpdates")
         if role_on == 0:
             await ctx.send("{} : Added NHSE Updates role! You will now be notified of any major NHSE news from now on!".format(ctx.author.mention))
         elif role_on == 1:
@@ -62,7 +62,7 @@ class Assignables(commands.Cog):
     @commands.command(name='togglepkhex')
     async def pkhexupdates(self, ctx):
         """Toggles the PKHeXUpdates role"""
-        role_on = await self.handletoggle(self, ctx, "PKHeXUpdates")
+        role_on = await self.handletoggle(ctx, "PKHeXUpdates")
         if role_on == 0:
             await ctx.send("{} : Added PKHeX Updates role! You will now be notified of any major PKHeX news from now on!".format(ctx.author.mention))
         elif role_on == 1:
@@ -71,7 +71,7 @@ class Assignables(commands.Cog):
     @commands.command(name='toggleweeb')
     async def weebrole(self, ctx):
         """Toggles the weeb role"""
-        role_on = await self.handletoggle(self, ctx, "weeb")
+        role_on = await self.handletoggle(ctx, "weeb")
         if role_on == 0:
             await ctx.send("{} : Added the weeb role! You can now access <#474763733537914882>!".format(ctx.author.mention))
         elif role_on == 1:
@@ -80,7 +80,7 @@ class Assignables(commands.Cog):
     @commands.command(name='togglemovies')
     async def moviesrole(self, ctx):
         """Toggles the Movie Nights! role"""
-        role_on = await self.handletoggle(self, ctx, "Movie Nights!")
+        role_on = await self.handletoggle(ctx, "Movie Nights!")
         if role_on == 0:
             await ctx.send("{} : Added the Movie Nights! role! You will now be notified of community movie nights!".format(ctx.author.mention))
         elif role_on == 1:
@@ -89,7 +89,7 @@ class Assignables(commands.Cog):
     @commands.command(name='togglegames')
     async def gamesrole(self, ctx):
         """Toggles the Community Games role"""
-        role_on = await self.handletoggle(self, ctx, "Community Games")
+        role_on = await self.handletoggle(ctx, "Community Games")
         if role_on == 0:
             await ctx.send("{} : Added the Community Games role! You will now be notified of community games!".format(ctx.author.mention))
         elif role_on == 1:
