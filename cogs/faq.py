@@ -93,8 +93,12 @@ class Faq(commands.Cog):
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         random_num = random.randint(1, 9999)
+        edit_type_readable = {
+            "q": "question",
+            "a": "answer"
+        }
         check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
-        await ctx.send("Enter the new content:\n\nType `abort-{:04d}` to abort.".format(random_num))
+        await ctx.send("Enter the new {} content:\n\nType `abort-{:04d}` to abort.".format(edit_type_readable[edit_type[0]], random_num))
         try:
             new_content = await self.bot.wait_for("message", check=check, timeout=30.0)
             if new_content.content == "abort-{:04d}".format(random_num):
