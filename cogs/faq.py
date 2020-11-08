@@ -95,9 +95,12 @@ class Faq(commands.Cog):
         random_num = random.randint(1, 9999)
         check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
         await ctx.send("Enter the new content:\n\nType `abort-{:04d}` to abort.".format(random_num))
-        new_content = await self.bot.wait_for("message", check=check, timeout=30.0)
-        if new_content.content == "abort-{:04d}".format(random_num):
-            return await ctx.send("❌ Canceled by user.")
+        try:
+            new_content = await self.bot.wait_for("message", check=check, timeout=30.0)
+            if new_content.content == "abort-{:04d}".format(random_num):
+                return await ctx.send("❌ Canceled by user.")
+        except asyncio.TimeoutError:
+            return await ctx.send("🚫 Timed out while waiting for a response, aborting.")
         if edit_type[0] == "q":
             faq_db[faq_id - 1][0] = new_content.content
         elif edit_type[0] == "a":
