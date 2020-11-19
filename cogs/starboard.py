@@ -90,7 +90,7 @@ class Starboard(commands.Cog):
             result = await conn.execute(query)
             starcount = self.bot.config['star_count']
             exists = False
-            for row in result:
+            for row in (await result.fetchall()):
                 exists = True
                 row_vals = tuple(row.values())
                 if starboard:
