@@ -188,25 +188,24 @@ class Mod(commands.Cog):
         embed.title = "<:banhammer:437900519822852096> Banned member" if ctx.guild.get_member(user.id) else "<:banhammer:437900519822852096> Banned user"
         embed.add_field(name="User", value=member.mention)
         embed.add_field(name="Action taken by", value=ctx.author.name)
-        if user:
-            if member:
-                if author.top_role.position < member.top_role.position + 1:
-                    return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
-            else:
-                try:
-                    await user.send("You have been banned from {}. The reason given was: `{}`.".format(
-                        self.bot.main_server.name, reason))
-                except discord.Forbidden:
-                    # DMs disabled by user
-                    pass
-                await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-                return_msg = "Banned user: {}".format(user.mention)
-                if reason:
-                    return_msg += " for reason `{}`".format(reason)
-                    embed.add_field(name="Reason", value=reason)
-                return_msg += "."
-                await ctx.send(return_msg)
-                await self.bot.modlog_channel.send(embed=embed)
+        if member:
+            if author.top_role.position < member.top_role.position + 1:
+                return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
+        else:
+            try:
+                await user.send("You have been banned from {}. The reason given was: `{}`.".format(
+                    self.bot.main_server.name, reason))
+            except discord.Forbidden:
+                # DMs disabled by user
+                pass
+            await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+            return_msg = "Banned user: {}".format(user.mention)
+            if reason:
+                return_msg += " for reason `{}`".format(reason)
+                embed.add_field(name="Reason", value=reason)
+            return_msg += "."
+            await ctx.send(return_msg)
+            await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
     @checks.check_permissions_or_owner(ban_members=True)
@@ -214,8 +213,8 @@ class Mod(commands.Cog):
     async def hackban(self, ctx, user_id: int, *, reason: str = None):
         user = self.bot.get_user(user_id)
         if user:
-            self.ban(ctx, user, reason=reason)
-    
+            await self.ban(ctx, user, reason=reason)
+
     @commands.command()
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
