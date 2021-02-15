@@ -85,7 +85,8 @@ disable=fixme,
     line-too-long,
     spelling,
     unused-argument,
-    no-self-use
+    no-self-use,
+    superfluous-parens
 
 
 [REPORTS]
