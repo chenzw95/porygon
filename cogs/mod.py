@@ -109,6 +109,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        # crypto scammers
         banlist = [
             r".*https://libra-sale.io.*",
             r".*https://ethway.io.*"
@@ -119,6 +120,16 @@ class Mod(commands.Cog):
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
                     await self.bot.modlog_channel.send("Banned user : {} for the following message: {}".format(author.mention, message.content))
+        # csgo/other game scammers
+        games = [
+            "csgo"
+        ]
+        for game in games:
+            if game in message.content.lower() and "https://" in message.content.lower():
+                author = message.author
+                if len(author.roles) == 1:
+                    await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
+                    await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} for the following message: {}".format(author.mention, message.content))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
