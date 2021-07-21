@@ -122,7 +122,8 @@ class Mod(commands.Cog):
                     await self.bot.modlog_channel.send("Banned user : {} for the following message: {}".format(author.mention, message.content))
         # csgo/other game scammers
         games = [
-            "csgo"
+            "csgo",
+            "steam"
         ]
         for game in games:
             if game in message.content.lower() and "https://" in message.content.lower():
