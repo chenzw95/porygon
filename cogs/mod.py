@@ -123,10 +123,12 @@ class Mod(commands.Cog):
         # csgo/other game scammers
         games = [
             "csgo",
+            "cs:go",
             "steam"
         ]
+        banned_sites = ['https://s', 'http://s', 'http://www.s', 'https://www.s']
         for game in games:
-            if game in message.content.lower() and "https://" in message.content.lower():
+            if game in message.content.lower() and any(domain in message.content.lower() for domain in banned_sites):
                 author = message.author
                 if len(author.roles) == 1:
                     await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
