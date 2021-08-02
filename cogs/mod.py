@@ -132,7 +132,7 @@ class Mod(commands.Cog):
                 author = message.author
                 if len(author.roles) == 1:
                     await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
-                    await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} for the following message: {}".format(author.mention, message.content))
+                    await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} for the following message: {}".format(author.mention, message.clean_content))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
