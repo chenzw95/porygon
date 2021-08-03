@@ -124,7 +124,8 @@ class Mod(commands.Cog):
         games = [
             "csgo",
             "cs:go",
-            "steam"
+            "steam",
+            "skins"
         ]
         banned_sites = ['https://s', 'http://s', 'http://www.s', 'https://www.s']
         for game in games:
