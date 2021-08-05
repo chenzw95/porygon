@@ -125,9 +125,11 @@ class Mod(commands.Cog):
             "csgo",
             "cs:go",
             "steam",
-            "skins"
+            "skins",
+            "@everyone",
+            "free"
         ]
-        banned_sites = ['https://s', 'http://s', 'http://www.s', 'https://www.s']
+        banned_sites = ['https://', 'http://', 'http://www.', 'https://www.']
         for game in games:
             if game in message.content.lower() and any(domain in message.content.lower() for domain in banned_sites):
                 author = message.author
