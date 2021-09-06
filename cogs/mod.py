@@ -109,6 +109,11 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        whitelisted_roles = ["Moderators", "aww"]
+        author = message.author
+        if any(r.name in whitelisted_roles for r in author.roles):
+            return
+        
         # crypto scammers
         banlist = [
             r".*https://libra-sale.io.*",
@@ -116,7 +121,6 @@ class Mod(commands.Cog):
         ]
         for ban in banlist:
             if re.match(ban, message.content.lower()):
-                author = message.author
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
                     await self.bot.modlog_channel.send("Banned user : {} for the following message: {}".format(author.mention, message.content))
@@ -132,10 +136,19 @@ class Mod(commands.Cog):
         banned_sites = ['https://', 'http://', 'http://www.', 'https://www.']
         for game in games:
             if game in message.content.lower() and any(domain in message.content.lower() for domain in banned_sites):
-                author = message.author
                 if len(author.roles) == 1:
                     await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
                     await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} for the following message: {}".format(author.mention, message.clean_content))
+                    
+        # everyone + embed
+        if "@everyone" in message.content.lower() and len(message.embeds) > 0:
+            await author.ban(reason="Likely a promotion", delete_message_days=1)
+            await self.bot.modlog_channel.send("Banned potential promotion spammer : {} for the following message: {}".format(author.mention, message.clean_content))
+        
+        # russian sites
+        if re.match(r".*http(.)?:\/\/[^\s]*\.ru.*", message.content.lower()):
+            await author.ban(reason="Detected russian site. Preemptively banning incase it is a scam", delete_message_days=1)
+            await self.bot.modlog_channel.send("Banned potential russian site spammer : {} for the following message: {}".format(author.mention, message.clean_content))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
