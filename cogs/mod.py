@@ -109,7 +109,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        whitelisted_roles = ["Moderators", "aww"]
+        whitelisted_roles = ["Moderators", "aww", "Porygon"]
         author = message.author
         if any(r.name in whitelisted_roles for r in author.roles):
             return
