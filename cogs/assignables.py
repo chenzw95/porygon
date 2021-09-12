@@ -77,24 +77,6 @@ class Assignables(commands.Cog):
         elif role_on == 1:
             await ctx.send("{} : Removed the weeb role! You will no longer be able to access the weeb-spoilers channel!".format(ctx.author.mention))
 
-    @commands.command(name='togglemovies')
-    async def moviesrole(self, ctx):
-        """Toggles the Movie Nights! role"""
-        role_on = await self.handletoggle(ctx, "Movie Nights!")
-        if role_on == 0:
-            await ctx.send("{} : Added the Movie Nights! role! You will now be notified of community movie nights!".format(ctx.author.mention))
-        elif role_on == 1:
-            await ctx.send("{} : Removed the Movie Nights! role! You will no longer be notified of community movie nights!".format(ctx.author.mention))
-
-    @commands.command(name='togglegames')
-    async def gamesrole(self, ctx):
-        """Toggles the Community Games role"""
-        role_on = await self.handletoggle(ctx, "Community Games")
-        if role_on == 0:
-            await ctx.send("{} : Added the Community Games role! You will now be notified of community games!".format(ctx.author.mention))
-        elif role_on == 1:
-            await ctx.send("{} : Removed the Community Games role! You will no longer be notified of community games!".format(ctx.author.mention))
-
 
 def setup(bot):
     bot.add_cog(Assignables(bot))
