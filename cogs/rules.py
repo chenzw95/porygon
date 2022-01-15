@@ -18,7 +18,7 @@ class Rules(commands.Cog):
         messages = []
         for rules_id, entry in enumerate(rules_db, start=1):
             embed = discord.Embed(color=discord.Color.red())
-            embed.title = "Q{}. {}".format(rules_id, entry[0])
+            embed.title = "R{}. {}".format(rules_id, entry[0])
             embed.description = entry[1]
             messages.append(embed)
         counter = 0
@@ -53,7 +53,7 @@ class Rules(commands.Cog):
                 return await ctx.send("❌ Canceled by user.")
         except asyncio.TimeoutError:
             return await ctx.send("🚫 Timed out while waiting for a response, aborting.")
-        if len("❔ QX. __{}__\n{}".format(question.content, answer.content)) > 1950:
+        if len("RX. __{}__\n{}".format(question.content, answer.content)) > 1950:
             return await ctx.send("⚠ This rule entry is too long.")
         with open("rules.json", "r") as f:
             rules_db = json.load(f)
