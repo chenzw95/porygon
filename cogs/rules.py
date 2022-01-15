@@ -64,7 +64,7 @@ class Rules(commands.Cog):
         self.bot.loop.create_task(self.update_rules())
 
     @rules.command(aliases=['del'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Moderators")
     async def delete(self, ctx, rules_id: int = 0):
         if rules_id == 0:
             return await ctx.send("⚠ Rule entry ID is required.")
@@ -80,7 +80,7 @@ class Rules(commands.Cog):
         self.bot.loop.create_task(self.update_rules())
 
     @rules.command(aliases=['modify'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Moderators")
     async def edit(self, ctx, rules_id: int = 0, edit_type: str = "d"):
         if rules_id == 0:
             return await ctx.send("⚠ Rule entry ID is required.")
