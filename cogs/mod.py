@@ -241,11 +241,11 @@ class Mod(commands.Cog):
             if role in member.roles:
                 await ctx.send("You cannot warn another staffer!")
                 return
-        await self.add_restriction(member, reason, issuer)
+        await self.add_warning(member, reason, issuer)
         with open("warnings.json", "r") as f:
             rsts = json.load(f)
             warn_count = len(rsts[str(member.id)]["warns"])
-        msg = "You were warned on DKD Subs."
+        msg = "You were warned on PKHeX Development server."
         if reason != "":
             msg += " The given reason is : " + reason 
         msg += "\n\nPlease read the rules of the server. This is warn #{}".format(warn_count)
@@ -283,7 +283,7 @@ class Mod(commands.Cog):
     @commands.has_any_role("Moderators", "aww")
     async def delwarn(self, ctx, member:discord.Member, idx:int):
         """Remove a specific warning from a user. Staff only."""
-        returnvalue = await self.remove_restriction(member,idx)
+        returnvalue = await self.remove_warning(member,idx)
         with open("warnings.json", "r") as f:
             rsts = json.load(f)
             warn_count = len(rsts[str(member.id)]["warns"])
