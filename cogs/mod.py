@@ -273,9 +273,10 @@ class Mod(commands.Cog):
             await member.send(msg)
         except discord.errors.Forbidden:
             pass # dont fail incase user has blocked the bot
-        msg = "⚠️ **Warned**: {} warned {} (warn #{}) | {}".format(issuer.mention, member.mention, warn_count, str(member))
+        msg = "⚠️ **Warned**: {} warned {} (warn #{}) | {}".format(issuer.name, member.mention, warn_count, str(member))
         if reason != "":
             msg += " The given reason is : " + reason
+        await ctx.send(msg)
         await self.bot.modlog_channel.send(msg)
     
     @commands.command(name="delwarn")
@@ -297,7 +298,8 @@ class Mod(commands.Cog):
                 await ctx.send("Warn index below 1!")
             return
         else:
-            msg = "🗑 **Deleted warn**: {} removed warn {} from {} | {}".format(ctx.message.author.mention, idx, member.mention, str(member))
+            msg = "🗑 **Deleted warn**: {} removed warn {} from {} | {}".format(ctx.message.author.name, idx, member.mention, str(member))
+            await ctx.send(msg)
             await self.bot.modlog_channel.send(msg, embed=returnvalue)
 
     @commands.command(name="clearwarns")
@@ -318,7 +320,8 @@ class Mod(commands.Cog):
         with open("warnings.json", "w") as f:
             json.dump(warns, f)
         await ctx.send("{} no longer has any warns!".format(member.mention))
-        msg = "🗑 **Cleared warns**: {} cleared {} warns from {} | {}".format(ctx.message.author.mention, warn_count, member.mention, str(member))
+        msg = "🗑 **Cleared warns**: {} cleared {} warns from {} | {}".format(ctx.message.author.name, warn_count, member.mention, str(member))
+        await ctx.send(msg)
         await self.bot.modlog_channel.send(msg)
 
     @commands.command()
