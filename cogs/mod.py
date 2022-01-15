@@ -2,6 +2,8 @@
 import asyncio
 import logging
 import re
+import json
+import time
 from datetime import datetime, timedelta
 
 import discord
@@ -65,6 +67,37 @@ class Mod(commands.Cog):
         async with self.bot.engine.acquire() as conn:
             delete_stmt = restrictions_tbl.delete().where((restrictions_tbl.c.user == member.id) & (restrictions_tbl.c.type == r_type))
             await conn.execute(delete_stmt)
+
+    async def add_warning(self, member, rst, issuer):
+        with open("warnings.json", "r") as f:
+            rsts = json.load(f)
+        if str(member.id) not in rsts:
+            rsts[str(member.id)] = {"warns": []}
+        rsts[str(member.id)]["name"] = str(member)
+        timestamp = time.strftime("%Y-%m-%d %H%M%S", time.localtime())
+        rsts[str(member.id)]["warns"].append({"issuer_id": issuer.id, "issuer_name":issuer.name, "reason":rst, "timestamp":timestamp})
+        with open("warnings.json", "w") as f:
+            json.dump(rsts, f)
+
+    async def remove_warning(self, member, count):
+        with open("warnings.json", "r") as f:
+            rsts = json.load(f)
+        if str(member.id) not in rsts:
+            return -1
+        warn_count = len(rsts[str(member.id)]["warns"])
+        if warn_count == 0:
+            return -1
+        if count > warn_count:
+            return -2
+        if count < 1:
+            return -3
+        warn = rsts[str(member.id)]["warns"][count-1]
+        embed = discord.Embed(color=discord.Color.dark_red(), title="Deleted Warn: {} on {}".format(count, warn["timestamp"]),
+                              description="Issuer: {0[issuer_name]}\nReason: {0[reason]}".format(warn))
+        del rsts[str(member.id)]["warns"][count-1]
+        with open("warnings.json", "w") as f:
+            json.dump(rsts, f)
+        return embed
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -174,6 +207,119 @@ class Mod(commands.Cog):
                 await ctx.send("{} : {} already has this role!".format(ctx.author.mention, member.name))
         else:
             await ctx.send("⚠ Unrecognised role!")
+
+    @commands.command(name="listwarns")
+    @commands.guild_only()
+    async def listwarns(self, ctx, member:discord.Member):
+        """Lists warnings for a user"""
+        if member == None:
+            member = ctx.message.author
+        embed = discord.Embed(color=discord.Color.dark_red())
+        embed.set_author(name="Warns for {}#{}".format(member.display_name, member.discriminator), icon_url=member.avatar_url)
+        with open("warnings.json", "r") as f:
+            warns = json.load(f)
+        try:
+            if len(warns[str(member.id)]["warns"]) == 0:
+                embed.description = "There are none!"
+                embed.color = discord.Color.green()
+            else:
+                for idx, warn in enumerate(warns[str(member.id)]["warns"]):
+                    embed.add_field(name="{}: {}".format(idx + 1, warn["timestamp"]), value="Issuer: {}\nReason: {}".format(warn["issuer_name"], warn["reason"]))
+        except KeyError:  # if the user is not in the file
+            embed.description = "There are none!"
+            embed.color = discord.Color.green()
+        await ctx.send(embed=embed)
+
+
+    @commands.command(name="warn")
+    @commands.guild_only()
+    @commands.has_any_role("Moderators", "aww")
+    async def warn(self, ctx, member:discord.Member, *, reason=""):
+        """Warn a user. Staff only."""
+        issuer = ctx.message.author
+        for role in [self.bot.mods_role, self.bot.owner_role, self.bot.aww_role]:
+            if role in member.roles:
+                await ctx.send("You cannot warn another staffer!")
+                return
+        await self.add_restriction(member, reason, issuer)
+        with open("warnings.json", "r") as f:
+            rsts = json.load(f)
+            warn_count = len(rsts[str(member.id)]["warns"])
+        msg = "You were warned on DKD Subs."
+        if reason != "":
+            msg += " The given reason is : " + reason 
+        msg += "\n\nPlease read the rules of the server. This is warn #{}".format(warn_count)
+        if warn_count == 2:
+            msg += " __The next warn will automatically kick.__"
+        if warn_count == 3:
+            msg += "\n\nYou were kicked because of this warning. You can join again right away. Two more warnings will result in an automatic ban."
+            try:
+                await member.kick(reason="Three Warnings")
+            except:
+                await ctx.send("No permission to kick the warned member")
+        if warn_count == 4:
+            msg += "\n\nYou were kicked because of this warning. This is your final warning. You can join again, but **one more warn will result in a ban**."
+            try:
+                await member.kick(reason="Four Warnings")
+            except:
+                await ctx.send("No permission to kick the warned member")
+        if warn_count == 5:
+            msg += "\n\nYou were automatically banned due to five warnings."
+            try:
+                await member.ban()
+            except:
+                await ctx.send("No permission to ban the warned member")
+        try:
+            await member.send(msg)
+        except discord.errors.Forbidden:
+            pass # dont fail incase user has blocked the bot
+        msg = "⚠️ **Warned**: {} warned {} (warn #{}) | {}".format(issuer.mention, member.mention, warn_count, str(member))
+        if reason != "":
+            msg += " The given reason is : " + reason
+        await self.bot.modlog_channel.send(msg)
+    
+    @commands.command(name="delwarn")
+    @commands.guild_only()
+    @commands.has_any_role("Moderators", "aww")
+    async def delwarn(self, ctx, member:discord.Member, idx:int):
+        """Remove a specific warning from a user. Staff only."""
+        returnvalue = await self.remove_restriction(member,idx)
+        with open("warnings.json", "r") as f:
+            rsts = json.load(f)
+            warn_count = len(rsts[str(member.id)]["warns"])
+        error = isinstance(returnvalue, int)
+        if error:
+            if returnvalue == -1:
+                await ctx.send("{} has no warns!".format(member.mention))
+            elif returnvalue == -2:
+                await ctx.send("Warn index is higher than warn count ({})!".format(warn_count))
+            elif returnvalue == -3:
+                await ctx.send("Warn index below 1!")
+            return
+        else:
+            msg = "🗑 **Deleted warn**: {} removed warn {} from {} | {}".format(ctx.message.author.mention, idx, member.mention, str(member))
+            await self.bot.modlog_channel.send(msg, embed=returnvalue)
+
+    @commands.command(name="clearwarns")
+    @commands.guild_only()
+    @commands.has_any_role("Moderators", "aww")
+    async def clearwarns(self, ctx, member:discord.Member):
+        """Clears warns of a specific member"""
+        with open("warnings.json", "r") as f:
+            warns = json.load(f)
+        if str(member.id) not in warns:
+            await ctx.send("{} has no warns!".format(member.mention))
+            return
+        warn_count = len(warns[str(member.id)]["warns"])
+        if warn_count == 0:
+            await ctx.send("{} has no warns!".format(member.mention))
+            return
+        warns[str(member.id)]["warns"] = []
+        with open("warnings.json", "w") as f:
+            json.dump(warns, f)
+        await ctx.send("{} no longer has any warns!".format(member.mention))
+        msg = "🗑 **Cleared warns**: {} cleared {} warns from {} | {}".format(ctx.message.author.mention, warn_count, member.mention, str(member))
+        await self.bot.modlog_channel.send(msg)
 
     @commands.command()
     @checks.check_permissions_or_owner(kick_members=True)
