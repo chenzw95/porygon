@@ -143,11 +143,10 @@ class Mod(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.guild == None:
-            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
             member = message.author
-            embed.title = f"Message from {str(member)}"
-            embed.add_field(name="Author", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
-            embed.add_field(name="Content", value="{}".format(message.clean_content))
+            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow(), icon_url=member.avatar_url)
+            embed.title = f"Message from {str(member)} ({member.name})"
+            embed.description = message.clean_content
             await self.bot.mod_channel.send(embed=embed)
 
         whitelisted_roles = ["Moderators", "aww", "Porygon"]
