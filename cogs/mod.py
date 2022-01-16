@@ -147,6 +147,7 @@ class Mod(commands.Cog):
             embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
             embed.set_author(name="Message from {}#{}".format(member.display_name, member.discriminator), icon_url=member.avatar_url)
             embed.description = message.clean_content
+            embed.set_footer(text="ID: {}".format(member.id))
             await self.bot.mod_channel.send(embed=embed)
 
         whitelisted_roles = ["Moderators", "aww", "Porygon"]
