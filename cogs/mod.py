@@ -144,8 +144,8 @@ class Mod(commands.Cog):
     async def on_message(self, message):
         if message.guild == None:
             member = message.author
-            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow(), icon_url=member.avatar_url)
-            embed.title = f"Message from {str(member)} ({member.name})"
+            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
+            embed.set_author(name="Message from {}#{}".format(member.display_name, member.discriminator), icon_url=member.avatar_url)
             embed.description = message.clean_content
             await self.bot.mod_channel.send(embed=embed)
 
