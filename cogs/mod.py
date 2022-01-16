@@ -142,6 +142,14 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.guild == None:
+            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
+            member = message.author
+            embed.title = f"Message from {str(member)}"
+            embed.add_field(name="Author", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
+            embed.add_field(name="Content", value="{}".format(message.clean_content))
+            await self.bot.mod_channel.send(embed=embed)
+
         whitelisted_roles = ["Moderators", "aww", "Porygon"]
         author = message.author
         if any(r.name in whitelisted_roles for r in author.roles):
@@ -182,14 +190,6 @@ class Mod(commands.Cog):
         if re.match(r".*http(.)?:\/\/[^\s]*\.ru.*", message.content.lower()):
             await author.ban(reason="Detected russian site. Preemptively banning incase it is a scam", delete_message_days=1)
             await self.bot.modlog_channel.send("Banned potential russian site spammer : {} for the following message: {}".format(author.mention, message.clean_content))
-
-        if message.guild == None:
-            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
-            member = message.author
-            embed.title = f"Message from {str(member)}"
-            embed.add_field(name="Author", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
-            embed.add_field(name="Content", value="{}".format(message.clean_content))
-            await self.bot.mod_channel.send(embed=embed)
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
