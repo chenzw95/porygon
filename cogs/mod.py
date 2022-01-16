@@ -145,6 +145,16 @@ class Mod(commands.Cog):
         if message.guild == None:
             member = message.author
             embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
+            if message.embeds:
+                data = message.embeds[0]
+                if data.type == 'image':
+                    embed.set_image(url=data.url)
+            if message.attachments:
+                file = message.attachments[0]
+                if file.url.lower().endswith(('png', 'jpeg', 'jpg', 'gif', 'webp')):
+                    embed.set_image(url=file.url)
+                else:
+                    embed.add_field(name='Attachment', value='[{0}]({1})'.format(file.filename, file.url), inline=False)
             embed.set_author(name="Message from {}#{}".format(member.display_name, member.discriminator), icon_url=member.avatar_url)
             embed.description = message.clean_content
             embed.set_footer(text="ID: {}".format(member.id))
