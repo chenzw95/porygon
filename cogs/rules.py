@@ -145,7 +145,7 @@ class Rules(commands.Cog):
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         embed = discord.Embed(color=discord.Color.red())
-        embed.title = "Q{}. {}".format(rules_id, entry[0])
+        embed.title = "R{}. {}".format(rules_id, entry[0])
         embed.description = entry[1]
         await ctx.send(embed=embed)
 
