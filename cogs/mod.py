@@ -142,7 +142,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.guild == None:
+        if message.guild == None and message.author != self.bot.user:
             member = message.author
             embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
             if message.embeds:
