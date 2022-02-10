@@ -265,32 +265,34 @@ class Mod(commands.Cog):
             warn_count = len(rsts[str(member.id)]["warns"])
         msg = "You were warned on PKHeX Development server."
         if reason != "":
-            msg += " The given reason is : " + reason 
+            msg += " The given reason was : " + reason 
         msg += "\n\nPlease read the rules of the server. This is warn #{}".format(warn_count)
-        if warn_count == 2:
-            msg += " __The next warn will automatically kick.__"
-        if warn_count == 3:
-            msg += "\n\nYou were kicked because of this warning. You can join again right away. Two more warnings will result in an automatic ban."
+        if warn_count >= 5:
+            msg += "\n\nYou were automatically banned due to five or more warnings."
             try:
-                await member.kick(reason="Three Warnings")
-            except:
-                await ctx.send("No permission to kick the warned member")
-        if warn_count == 4:
-            msg += "\n\nYou were kicked because of this warning. This is your final warning. You can join again, but **one more warn will result in a ban**."
-            try:
-                await member.kick(reason="Four Warnings")
-            except:
-                await ctx.send("No permission to kick the warned member")
-        if warn_count == 5:
-            msg += "\n\nYou were automatically banned due to five warnings."
-            try:
+                try:
+                    await member.send(msg)
+                except discord.errors.Forbidden:
+                    pass # dont fail incase user has blocked the bot
                 await member.ban()
             except:
                 await ctx.send("No permission to ban the warned member")
-        try:
-            await member.send(msg)
-        except discord.errors.Forbidden:
-            pass # dont fail incase user has blocked the bot
+        elif warn_count >= 3:
+            msg += "\n\nYou were kicked because of this warning. You can join again right away. Reaching 5 warnings will result in an automatic ban. Permanent invite link: https://discord.gg/tDMvSRv."
+            try:
+                try:
+                    await member.send(msg)
+                except discord.errors.Forbidden:
+                    pass # dont fail incase user has blocked the bot
+                await member.kick(reason="Three or Four Warnings")
+            except:
+                await ctx.send("No permission to kick the warned member")
+        elif warn_count <= 2:
+            msg += " __The next warn will automatically kick.__"
+            try:
+                await member.send(msg)
+            except discord.errors.Forbidden:
+                pass # dont fail incase user has blocked the bot
         msg = "⚠️ **Warned**: {} warned {} (warn #{}) | {}".format(issuer.name, member.mention, warn_count, str(member))
         if reason != "":
             msg += " The given reason is : " + reason
