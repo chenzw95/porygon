@@ -375,6 +375,39 @@ class Mod(commands.Cog):
                 return_msg += "."
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
+                
+    @commands.command()
+    @checks.check_permissions_or_owner(kick_members=True)
+    @commands.bot_has_permissions(kick_members=True)
+    async def kickwarn(self, ctx, member: discord.Member, *, reason: str = None):
+        """Kicks a member."""
+        author = ctx.message.author
+        embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
+        embed.title = "👢 Kicked and warned member"
+        embed.add_field(name="User", value=member.mention)
+        embed.add_field(name="Action taken by", value=ctx.author.name)
+        if member:
+            if author.top_role.position < member.top_role.position + 1:
+                return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
+            else:
+                try:
+                    await member.send("You have been kicked and warned from {}. The reason given was: `{}`. You may rejoin the server any time you wish: https://discord.gg/tDMvSRv".format(
+                        self.bot.main_server.name, reason))
+                except discord.Forbidden:
+                    # DMs disabled by user
+                    pass
+                await self.add_warning(member, reason, author)
+                await member.kick(reason=reason)
+                self.kick_counter += 1
+                with open("kick_counter.txt", "w") as f:
+                    f.write(str(self.kick_counter))
+                return_msg = "Kicked user: {}".format(member.mention)
+                if reason:
+                    return_msg += " for reason `{}`".format(reason)
+                    embed.add_field(name="Reason", value=reason)
+                return_msg += "."
+                await ctx.send(return_msg)
+                await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
     @checks.check_permissions_or_owner(ban_members=True)
