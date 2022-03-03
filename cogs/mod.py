@@ -408,7 +408,7 @@ class Mod(commands.Cog):
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
                     embed.add_field(name="Reason", value=reason)
-                return_msg += " | **Warned**: {} warned {} (warn #{}) | {}".format(issuer.name, member.mention, warn_count, str(member))
+                return_msg += " | **Warned**: {} warned {} (warn #{}) | {}".format(author.name, member.mention, warn_count, str(member))
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
