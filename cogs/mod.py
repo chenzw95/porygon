@@ -397,6 +397,9 @@ class Mod(commands.Cog):
                     # DMs disabled by user
                     pass
                 await self.add_warning(member, reason, author)
+                with open("warnings.json", "r") as f:
+                    rsts = json.load(f)
+                    warn_count = len(rsts[str(member.id)]["warns"])
                 await member.kick(reason=reason)
                 self.kick_counter += 1
                 with open("kick_counter.txt", "w") as f:
@@ -405,7 +408,7 @@ class Mod(commands.Cog):
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
                     embed.add_field(name="Reason", value=reason)
-                return_msg += "."
+                return_msg += " | **Warned**: {} warned {} (warn #{}) | {}".format(issuer.name, member.mention, warn_count, str(member))
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
