@@ -390,22 +390,34 @@ class Mod(commands.Cog):
             if author.top_role.position < member.top_role.position + 1:
                 return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
             else:
+                await self.add_warning(member, reason, author)
+                with open("warnings.json", "r") as f:
+                    rsts = json.load(f)
+                    warn_count = len(rsts[str(member.id)]["warns"])
                 try:
-                    await member.send("You have been kicked and warned from {}. The reason given was: `{}`. You may rejoin the server any time you wish: https://discord.gg/tDMvSRv".format(
-                        self.bot.main_server.name, reason))
+                    user_msg = "You have been kicked and warned from {}. You currently have {} warning(s). The reason given was: `{}`. You may rejoin the server any time you wish: https://discord.gg/tDMvSRv .".format(
+                        self.bot.main_server.name, warn_count, reason)
+                    if warn_count > 3:
+                        user_msg += "Your next regular warning will be an automatic ban!"
+                    elif warn_count > 1:
+                        user_msg += "Your next regular warning will be an automatic kick!"
+                    await member.send(user_msg)
                 except discord.Forbidden:
                     # DMs disabled by user
                     pass
-                await self.add_warning(member, reason, author)
-                await member.kick(reason=reason)
-                self.kick_counter += 1
-                with open("kick_counter.txt", "w") as f:
-                    f.write(str(self.kick_counter))
-                return_msg = "Kicked user: {}".format(member.mention)
+                if warn_count < 5:
+                    await member.kick(reason=reason)
+                    self.kick_counter += 1
+                    with open("kick_counter.txt", "w") as f:
+                        f.write(str(self.kick_counter))
+                    return_msg = "Kicked user: {}".format(member.mention)
+                else:
+                    await member.ban(reason=reason, delete_message_days=0)
+                    return_msg = "Banned user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
                     embed.add_field(name="Reason", value=reason)
-                return_msg += "."
+                return_msg += " | **Warned**: {} warned {} (warn #{}) | {}".format(author.name, member.mention, warn_count, str(member))
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
