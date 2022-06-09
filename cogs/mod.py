@@ -452,16 +452,6 @@ class Mod(commands.Cog):
         user = await self.bot.fetch_user(user_id)
         if user:
             await self.ban(ctx, user, reason=reason)
-        return_msg = "Banned user: {}".format(user.mention)
-        embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at, title="<:banhammer:437900519822852096> Banned member")
-        embed.add_field(name="User", value=user.mention)
-        embed.add_field(name="Action taken by", value=ctx.author.name)
-        if reason:
-            return_msg += " for reason `{}`".format(reason)
-            embed.add_field(name="Reason", value=reason)
-        return_msg += "."
-        await ctx.send(return_msg)
-        await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
     @checks.check_permissions_or_owner(manage_roles=True)
