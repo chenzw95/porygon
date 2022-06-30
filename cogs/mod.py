@@ -427,7 +427,7 @@ class Mod(commands.Cog):
     async def ban(self, ctx, user: discord.User, *, reason: str = None):
         """Bans a member/user."""
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at, title="<:banhammer:437900519822852096> Banned member")
-        embed.add_field(name="User", value=member.mention)
+        embed.add_field(name="User", value="{} ({})".format(user.mention, user))
         embed.add_field(name="Action taken by", value=ctx.author.name)
         member = ctx.guild.get_member(user.id)
         if member and ctx.message.author.top_role.position < member.top_role.position + 1:
