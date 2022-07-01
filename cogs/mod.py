@@ -274,7 +274,7 @@ class Mod(commands.Cog):
                     await member.send(msg)
                 except discord.errors.Forbidden:
                     pass # dont fail incase user has blocked the bot
-                await member.ban()
+                await member.ban(reason=reason, delete_message_days=0)
             except:
                 await ctx.send("No permission to ban the warned member")
         elif warn_count >= 3:
