@@ -236,7 +236,7 @@ class Mod(commands.Cog):
             raise commands.errors.CheckFailure()
             return
         embed = discord.Embed(color=discord.Color.dark_red())
-        embed.set_author(name="Warns for {}".format(user), icon_url=str(user.avatar))
+        embed.set_author(name="Warns for {}".format(user), icon_url=user.avatar_url)
         with open("warnings.json", "r") as f:
             warns = json.load(f)
         try:
