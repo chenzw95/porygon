@@ -228,20 +228,23 @@ class Mod(commands.Cog):
 
     @commands.command(name="listwarns")
     @commands.guild_only()
-    async def listwarns(self, ctx, member:discord.Member):
+    async def listwarns(self, ctx, user:discord.User = None):
         """Lists warnings for a user"""
-        if member == None:
-            member = ctx.message.author
+        if user == None or user == ctx.author:
+            user = ctx.author
+        elif user and not any(role for role in ctx.author.roles if role.name in ["aww", "Moderators"]):
+            raise commands.errors.CheckFailure()
+            return
         embed = discord.Embed(color=discord.Color.dark_red())
-        embed.set_author(name="Warns for {}#{}".format(member.display_name, member.discriminator), icon_url=member.avatar_url)
+        embed.set_author(name="Warns for {}".format(user), icon_url=str(user.avatar))
         with open("warnings.json", "r") as f:
             warns = json.load(f)
         try:
-            if len(warns[str(member.id)]["warns"]) == 0:
+            if len(warns[str(user.id)]["warns"]) == 0:
                 embed.description = "There are none!"
                 embed.color = discord.Color.green()
             else:
-                for idx, warn in enumerate(warns[str(member.id)]["warns"]):
+                for idx, warn in enumerate(warns[str(user.id)]["warns"]):
                     embed.add_field(name="{}: {}".format(idx + 1, warn["timestamp"]), value="Issuer: {}\nReason: {}".format(warn["issuer_name"], warn["reason"]))
         except KeyError:  # if the user is not in the file
             embed.description = "There are none!"
