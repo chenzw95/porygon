@@ -19,6 +19,7 @@ from .utils import checks
 class Mod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.session_banlist = set()
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
         with open("kick_counter.txt", "r") as f:
@@ -164,6 +165,22 @@ class Mod(commands.Cog):
         author = message.author
         if any(r.name in whitelisted_roles for r in author.roles):
             return
+
+        if author.id in self.session_banlist:
+            await message.delete()
+            return
+
+        # non alpha numeric characters in message
+        def isEnglish(s):
+            try:
+                s.encode(encoding='utf-8').decode('ascii')
+            except UnicodeDecodeError:
+                return False
+            else:
+                return True
+        if len(author.roles) == 1 and isEnglish(message.content) == False:
+            await author.ban(reason="Non-English characters in message with no author roles", delete_message_days=1)
+            await self.bot.modlog_channel.send("Banned user : {}#{} ({}) for non-English characters in message".format(author.name, author.discriminator, author.id))
         
         # crypto scammers
         banlist = [
@@ -175,6 +192,7 @@ class Mod(commands.Cog):
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
                     await self.bot.modlog_channel.send("Banned user : {} for the following message: {}".format(author.mention, message.content))
+
         # csgo/other game scammers
         games = [
             "csgo",
@@ -182,7 +200,8 @@ class Mod(commands.Cog):
             "steam",
             "skins",
             "@everyone",
-            "free"
+            "free",
+            "nitro"
         ]
         banned_sites = ['https://', 'http://', 'http://www.', 'https://www.']
         for game in games:
@@ -228,20 +247,23 @@ class Mod(commands.Cog):
 
     @commands.command(name="listwarns")
     @commands.guild_only()
-    async def listwarns(self, ctx, member:discord.Member):
+    async def listwarns(self, ctx, user:discord.User = None):
         """Lists warnings for a user"""
-        if member == None:
-            member = ctx.message.author
+        if user == None or user == ctx.author:
+            user = ctx.author
+        elif user and not any(role for role in ctx.author.roles if role.name in ["aww", "Moderators"]):
+            raise commands.errors.CheckFailure()
+            return
         embed = discord.Embed(color=discord.Color.dark_red())
-        embed.set_author(name="Warns for {}#{}".format(member.display_name, member.discriminator), icon_url=member.avatar_url)
+        embed.set_author(name="Warns for {}".format(user), icon_url=user.avatar_url)
         with open("warnings.json", "r") as f:
             warns = json.load(f)
         try:
-            if len(warns[str(member.id)]["warns"]) == 0:
+            if len(warns[str(user.id)]["warns"]) == 0:
                 embed.description = "There are none!"
                 embed.color = discord.Color.green()
             else:
-                for idx, warn in enumerate(warns[str(member.id)]["warns"]):
+                for idx, warn in enumerate(warns[str(user.id)]["warns"]):
                     embed.add_field(name="{}: {}".format(idx + 1, warn["timestamp"]), value="Issuer: {}\nReason: {}".format(warn["issuer_name"], warn["reason"]))
         except KeyError:  # if the user is not in the file
             embed.description = "There are none!"
@@ -427,7 +449,7 @@ class Mod(commands.Cog):
     async def ban(self, ctx, user: discord.User, *, reason: str = None):
         """Bans a member/user."""
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at, title="<:banhammer:437900519822852096> Banned member")
-        embed.add_field(name="User", value=member.mention)
+        embed.add_field(name="User", value="{} ({})".format(user.mention, user))
         embed.add_field(name="Action taken by", value=ctx.author.name)
         member = ctx.guild.get_member(user.id)
         if member and ctx.message.author.top_role.position < member.top_role.position + 1:
