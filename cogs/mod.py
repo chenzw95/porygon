@@ -19,6 +19,7 @@ from .utils import checks
 class Mod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.session_banlist = set()
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
         with open("kick_counter.txt", "r") as f:
@@ -164,6 +165,22 @@ class Mod(commands.Cog):
         author = message.author
         if any(r.name in whitelisted_roles for r in author.roles):
             return
+
+        if author.id in self.session_banlist:
+            await message.delete()
+            return
+
+        # non alpha numeric characters in message
+        def isEnglish(s):
+            try:
+                s.encode(encoding='utf-8').decode('ascii')
+            except UnicodeDecodeError:
+                return False
+            else:
+                return True
+        if len(author.roles) == 1 and isEnglish(message.content) == False:
+            await author.ban(reason="Non-English characters in message with no author roles", delete_message_days=1)
+            await self.bot.modlog_channel.send("Banned user : {}#{} ({}) for non-English characters in message".format(author.name, author.discriminator, author.id))
         
         # crypto scammers
         banlist = [
@@ -175,6 +192,7 @@ class Mod(commands.Cog):
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
                     await self.bot.modlog_channel.send("Banned user : {} for the following message: {}".format(author.mention, message.content))
+
         # csgo/other game scammers
         games = [
             "csgo",
@@ -182,7 +200,8 @@ class Mod(commands.Cog):
             "steam",
             "skins",
             "@everyone",
-            "free"
+            "free",
+            "nitro"
         ]
         banned_sites = ['https://', 'http://', 'http://www.', 'https://www.']
         for game in games:
