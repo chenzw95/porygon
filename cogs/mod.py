@@ -104,7 +104,7 @@ class Mod(commands.Cog):
     async def on_member_join(self, member):
         embed = discord.Embed(color=discord.Color.green())
         embed.title = "🆕 New member"
-        embed.add_field(name="User", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
+        embed.add_field(name="User", value="{} ({})".format(member, member.id))
         embed.add_field(name="Mention", value=member.mention, inline=False)
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
@@ -123,7 +123,7 @@ class Mod(commands.Cog):
     async def on_member_remove(self, member):
         embed = discord.Embed(color=discord.Color.red(), timestamp=datetime.utcnow())
         embed.title = "🚪 Member left"
-        embed.add_field(name="User", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
+        embed.add_field(name="User", value="{} ({})".format(member, member.id))
         embed.add_field(name="Mention", value=member.mention, inline=False)
         await self.bot.modlog_channel.send(embed=embed)
 
@@ -132,7 +132,7 @@ class Mod(commands.Cog):
         embed = discord.Embed(color=discord.Color.blue(), timestamp=datetime.utcnow())
         member = message.author
         embed.title = "🗑️ Message deleted"
-        embed.add_field(name="Author", value="{}#{} ({})".format(member.name, member.discriminator, member.id))
+        embed.add_field(name="Author", value="{} ({})".format(member, member.id))
         embed.add_field(name="Mention", value=member.mention, inline=False)
         embed.add_field(name="Content", value="`{}`".format(message.clean_content))
         embed.add_field(name="Channel", value="{} ({})".format(message.channel.mention, message.channel.id))
@@ -156,7 +156,7 @@ class Mod(commands.Cog):
                     embed.set_image(url=file.url)
                 else:
                     embed.add_field(name='Attachment', value='[{0}]({1})'.format(file.filename, file.url), inline=False)
-            embed.set_author(name="Message from {}#{}".format(member.display_name, member.discriminator), icon_url=member.avatar_url)
+            embed.set_author(name="Message from {}".format(member), icon_url=member.avatar_url)
             embed.description = message.clean_content
             embed.set_footer(text="ID: {}".format(member.id))
             await self.bot.mod_channel.send(embed=embed)
@@ -180,7 +180,7 @@ class Mod(commands.Cog):
                 return True
         if len(author.roles) == 1 and isEnglish(message.content) == False:
             await author.ban(reason="Non-English characters in message with no author roles", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned user : {}#{} ({}) for non-English characters in message".format(author.name, author.discriminator, author.id))
+            await self.bot.modlog_channel.send("Banned user : {} ({}) for non-English characters in message\n Message: ```{}```".format(author, author.id, message.content))
         
         # crypto scammers
         banlist = [
@@ -191,7 +191,7 @@ class Mod(commands.Cog):
             if re.match(ban, message.content.lower()):
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
-                    await self.bot.modlog_channel.send("Banned user : {} for the following message: {}".format(author.mention, message.content))
+                    await self.bot.modlog_channel.send("Banned user : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # csgo/other game scammers
         games = [
@@ -208,17 +208,17 @@ class Mod(commands.Cog):
             if game in message.content.lower() and any(domain in message.content.lower() for domain in banned_sites):
                 if len(author.roles) == 1:
                     await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
-                    await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} for the following message: {}".format(author.mention, message.clean_content))
+                    await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
                     
         # everyone + embed
         if "@everyone" in message.content.lower() and len(message.embeds) > 0:
             await author.ban(reason="Likely a promotion", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned potential promotion spammer : {} for the following message: {}".format(author.mention, message.clean_content))
+            await self.bot.modlog_channel.send("Banned potential promotion spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
         
         # russian sites
         if re.match(r".*http(.)?:\/\/[^\s]*\.ru.*", message.content.lower()):
             await author.ban(reason="Detected russian site. Preemptively banning incase it is a scam", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned potential russian site spammer : {} for the following message: {}".format(author.mention, message.clean_content))
+            await self.bot.modlog_channel.send("Banned potential russian site spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
