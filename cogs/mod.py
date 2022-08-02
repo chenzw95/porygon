@@ -178,7 +178,8 @@ class Mod(commands.Cog):
                 return False
             else:
                 return True
-        if len(author.roles) == 1 and isEnglish(message.content) == False:
+        # 683840764677193739 = #wanna-voice-but-cant-talk
+        if len(author.roles) == 1 and isEnglish(message.content) == False and ('https://' in message.content or 'http://' in message.content) and message.channel.id == 683840764677193739:
             await author.ban(reason="Non-English characters in message with no author roles", delete_message_days=1)
             await self.bot.modlog_channel.send("Banned user : {} ({}) for non-English characters in message\n Message: ```{}```".format(author, author.id, message.content))
         
