@@ -235,6 +235,7 @@ class Mod(commands.Cog):
                 continue
             if invite.id in self.whitelisted_guild_ids:
                 await message.author.add_roles(self.bot.mute_role, reason="Posted non-whitelisted invite")
+                await message.delete()
                 return await self.bot.modlog_channel.send("Muted user posting a non-whitelisted invite : {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
 
     @commands.command(name='promote', aliases=['addrole'])
