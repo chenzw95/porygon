@@ -230,10 +230,9 @@ class Mod(commands.Cog):
         # invite filtering
         msg_split = message.content.split(" ")
         for phrase in msg_split:
-            try:
-                invite = await self.bot.fetch_invite(phrase)
-            except discord.NotFound:
+            if "discord." not in phrase:
                 continue
+            invite = await self.bot.fetch_invite(phrase)
             if invite.id in self.whitelisted_guild_ids and message.channel.id not in (683403876208083026, 683403966607786058):  # ID 683403876208083026 = #list-your-sysbot-server, ID 683403966607786058 = #sysbot-servers
                 await message.author.add_roles(self.bot.mute_role, reason="Posted non-whitelisted invite")
                 await message.delete()
