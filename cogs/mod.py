@@ -4,6 +4,7 @@ import logging
 import re
 import json
 import time
+import os
 from datetime import datetime, timedelta
 
 import discord
@@ -27,6 +28,11 @@ class Mod(commands.Cog):
                 self.kick_counter = int(f.read())
             except ValueError:
                 self.kick_counter = 0
+        if not os.path.exists("whitelisted_guild_ids.json"):
+            with open("whitelisted_guild_ids.json", "w") as file:
+                json.dump([], file, indent=4)
+        with open("whitelisted_guild_ids.json", "r") as file:
+            self.whitelisted_guild_ids = json.load(file)
 
     def cog_unload(self):
         self.expiry_task.cancel()
@@ -219,6 +225,17 @@ class Mod(commands.Cog):
         if re.match(r".*http(.)?:\/\/[^\s]*\.ru.*", message.content.lower()):
             await author.ban(reason="Detected russian site. Preemptively banning incase it is a scam", delete_message_days=1)
             await self.bot.modlog_channel.send("Banned potential russian site spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+
+        # invite filtering
+        msg_split = message.content.split(" ")
+        for phrase in msg_split:
+            try:
+                invite = await self.bot.fetch_invite(phrase)
+            except discord.NotFound:
+                continue
+            if invite.id in self.whitelisted_guild_ids:
+                await message.author.add_roles(self.bot.mute_role, reason="Posted non-whitelisted invite")
+                return await self.bot.modlog_channel.send("Muted user posting a non-whitelisted invite : {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
@@ -546,6 +563,49 @@ class Mod(commands.Cog):
         embed = discord.Embed(color=discord.Color.dark_green(), timestamp=ctx.message.created_at)
         embed.title = "🔉 Unmuted member"
         embed.add_field(name="Member", value=member.mention).add_field(name="Member ID", value=member.id)
+        embed.add_field(name="Action taken by", value=ctx.author.name)
+        await self.bot.modlog_channel.send(embed=embed)
+
+    @commands.command(name="wlguild")
+    @checks.check_permissions_or_owner(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def whitelist_guild(self, ctx, guild_invite: str, reason: str = "No reason was given."):
+        """Whitelists a guild ID for posting"""
+        try:
+            invite = await self.bot.fetch_invite(guild_invite)
+        except discord.NotFound:
+            return await ctx.send("Failed to resolve that invite. Are you sure it exists?")
+        if invite.guild.id in self.whitelisted_guild_ids:
+            return await ctx.send(f"Guild `{invite.guild.name}` is already whitelisted!")
+        self.whitelisted_guild_ids.append(invite.guild.id)
+        with open("whitelisted_guild_ids.json", "w") as file:
+            json.dump(self.whitelisted_guild_ids, file, indent=4)
+        await ctx.send(f"Successfully whitelisted the ID for `{invite.guild.name}`!")
+        embed = discord.Embed(title="Whitelisted Guild")
+        embed.add_field(name="Guild Info", value=f"{invite.guild.name} ({invite.guild.id})")
+        embed.add_field(name="Invite URL", value=f"Click [here]({invite.url})")
+        embed.add_field(name="Action taken by", value=ctx.author.name)
+        embed.add_field(name="Reason", value=reason)
+        await self.bot.modlog_channel.send(embed=embed)
+
+    @commands.command(name="dewlguild")
+    @checks.check_permissions_or_owner(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def dewhitelist_guild(self, ctx, guild_invite: str):
+        """Removes  a guild ID from the whitelist"""
+        try:
+            invite = await self.bot.fetch_invite(guild_invite)
+        except discord.NotFound:
+            return await ctx.send("Failed to resolve that invite. Are you sure it exists?")
+        if invite.guild.id not in self.whitelisted_guild_ids:
+            return await ctx.send(f"Guild `{invite.guild.name}` is not whitelisted!")
+        self.whitelisted_guild_ids.remove(invite.guild.id)
+        with open("whitelisted_guild_ids.json", "w") as file:
+            json.dump(self.whitelisted_guild_ids, file, indent=4)
+        await ctx.send(f"Successfully de-whitelisted the ID for `{invite.guild.name}`!")
+        embed = discord.Embed(title="De-whitelisted Guild")
+        embed.add_field(name="Guild Info", value=f"{invite.guild.name} ({invite.guild.id})")
+        embed.add_field(name="Invite URL", value=f"Click [here]({invite.url})")
         embed.add_field(name="Action taken by", value=ctx.author.name)
         await self.bot.modlog_channel.send(embed=embed)
 
