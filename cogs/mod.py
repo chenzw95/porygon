@@ -616,10 +616,10 @@ class Mod(commands.Cog):
         await ctx.send("This incident has been reported to the proper authorities. Thank you for your time.")
 
     wiki_strings = {
-        "alm": "You can find ALM and LiveHex's wiki [here](https://github.com/architdate/PKHeX-Plugins/wiki)\nYou can find general troubleshooting steps [here](https://github.com/architdate/PKHeX-Plugins/wiki/FAQ-and-Troubleshooting)\nYou can find LiveHex connection troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors) and usb-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting)",
-        "pksysbot": "You can find Sysbot.NET's wiki [here](https://github.com/kwsch/SysBot.NET/wiki)\nYou can find general troubleshooting steps [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting)\nYou can find troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors) and usb-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting)",
-        "acsysbot": "You can find Sysbot.AC's wiki [here](https://github.com/kwsch/SysBot.AnimalCrossing/wiki)\nYou can find general troubleshooting steps [here](https://github.com/kwsch/SysBot.AnimalCrossing/wiki/Troubleshooting)",
-        "nhse": "You can find NHSE's wiki [here](https://github.com/kwsch/NHSE/wiki)"
+        "alm": "You can find ALM and LiveHex's wiki [here](https://github.com/architdate/PKHeX-Plugins/wiki)\nYou can find general troubleshooting steps [here](https://github.com/architdate/PKHeX-Plugins/wiki/FAQ-and-Troubleshooting)\nYou can find LiveHex connection troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors) and usb-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting).",
+        "pksysbot": "You can find Sysbot.NET's wiki [here](https://github.com/kwsch/SysBot.NET/wiki)\nYou can find general troubleshooting steps [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting)\nYou can find troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors) and usb-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting).",
+        "acsysbot": "You can find Sysbot.AC's wiki [here](https://github.com/kwsch/SysBot.AnimalCrossing/wiki)\nYou can find general troubleshooting steps [here](https://github.com/kwsch/SysBot.AnimalCrossing/wiki/Troubleshooting).",
+        "nhse": "You can find NHSE's wiki [here](https://github.com/kwsch/NHSE/wiki)."
     }
 
     @commands.command()
@@ -636,7 +636,7 @@ class Mod(commands.Cog):
                 target = "nhse"
             else:
                 target = ""
-        embed = discord.Embed()
+        embed = discord.Embed(title="Wiki Links")
         if target.lower() in ("alm", "livehex"):
             embed.description = self.wiki_strings["alm"]
         elif target.lower() == "pksysbot":
@@ -647,7 +647,10 @@ class Mod(commands.Cog):
             embed.description = self.wiki_strings["nhse"]
         else:
             for key, value in self.wiki_strings.items():
-                embed.add_field(name=key.capitalize() if key == "livehex" else "Sysbot.Net" if key == "pksysbot" else "Sysbot.AC" if key == "acsysbot" else key.upper(), value=value)
+                embed.add_field(
+                    name=key.capitalize() if key == "livehex" else "Sysbot.Net" if key == "pksysbot" else "Sysbot.AC" if key == "acsysbot" else key.upper(),
+                    value=value,
+                    inline=False)
         embed.set_footer(text="Please read through every troubleshooting step on the repo before asking a question.")
         await ctx.send(embed=embed)
 
