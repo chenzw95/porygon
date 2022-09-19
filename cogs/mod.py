@@ -12,6 +12,7 @@ from discord.ext import commands
 from discord.ext.commands import BucketType
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy import null
+import subprocess
 
 from database import restrictions_tbl
 from .utils import checks
@@ -653,6 +654,13 @@ class Mod(commands.Cog):
                     inline=False)
         embed.set_footer(text="Please read through every troubleshooting step on the repo before asking a question.")
         await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.has_any_role("Moderators")
+    async def gitpull(self, ctx):
+        """Pulls the latest changes from the git repo"""
+        out = subprocess.Popen('git pull', stdout=subprocess.PIPE, shell=True)
+        await ctx.send(out.communicate()[0].decode("utf-8"))
 
     @kick.error
     @ban.error
