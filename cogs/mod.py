@@ -618,23 +618,17 @@ class Mod(commands.Cog):
 
     wiki_strings = {
         "alm": "You can find:\n- ALM and LiveHex's wiki [here](https://github.com/architdate/PKHeX-Plugins/wiki).\n- General troubleshooting steps [here](https://github.com/architdate/PKHeX-Plugins/wiki/FAQ-and-Troubleshooting).\n- LiveHex connection troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors).\n- LiveHex connection troubleshooting steps for USB-Botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting).",
-        "pksysbot": "You can find:\n- Sysbot.NET's wiki [here](https://github.com/kwsch/SysBot.NET/wiki).\n- General troubleshooting steps [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting).\n- Troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors).\n- Troubleshooting steps for USB-Botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting).",
-        "acsysbot": "You can find:\n- Sysbot.AC's wiki [here](https://github.com/kwsch/SysBot.AnimalCrossing/wiki).\n- General troubleshooting steps [here](https://github.com/kwsch/SysBot.AnimalCrossing/wiki/Troubleshooting).",
-        "nhse": "You can find NHSE's wiki [here](https://github.com/kwsch/NHSE/wiki)."
+        "pksysbot": "You can find:\n- Sysbot.NET's wiki [here](https://github.com/kwsch/SysBot.NET/wiki).\n- General troubleshooting steps [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting).\n- Troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors).\n- Troubleshooting steps for USB-Botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting)."
     }
 
     @commands.command()
     async def wiki(self, ctx, target: str = None):
-        """Sends a link to the target wiki. Automatic choice in help channels. Targets: alm | livehex, pksysbot, acsysbot, nhse"""
-        if not target or target not in ("alm", "livehex", "pksysbot", "acsysbot", "nhse"):
+        """Sends a link to the target wiki. Automatic choice in help channels. Targets: alm | livehex, pksysbot"""
+        if not target or target not in ("alm", "livehex", "pksysbot"):
             if ctx.channel.id == 401017466878296084:
                 target = "alm"
             elif ctx.channel.id == 679118895378071568:
                 target = "pksysbot"
-            elif ctx.channel.id == 740348610029551726:
-                target = "acsysbot"
-            elif ctx.channel.id == 692189831752581212:
-                target = "nhse"
             else:
                 target = ""
         embed = discord.Embed(title="Wiki Links")
@@ -644,16 +638,10 @@ class Mod(commands.Cog):
         elif target.lower() == "pksysbot":
             embed.title = "Sysbot.NET Wiki Links"
             embed.description = self.wiki_strings["pksysbot"]
-        elif target.lower() == "acsysbot":
-            embed.title = "Sysbot.AC Wiki Links"
-            embed.description = self.wiki_strings["acsysbot"]
-        elif target.lower() == "nhse":
-            embed.title = "NHSE Wiki Links"
-            embed.description = self.wiki_strings["nhse"]
         else:
             for key, value in self.wiki_strings.items():
                 embed.add_field(
-                    name="Sysbot.Net" if key == "pksysbot" else "Sysbot.AC" if key == "acsysbot" else (key.upper() + " and LiveHex" if key == "alm" else key.upper()),
+                    name="Sysbot.Net" if key == "pksysbot" else key.upper() + " and LiveHex" if key == "alm" else key.upper(),
                     value=value,
                     inline=False)
         embed.set_footer(text="Please read through every troubleshooting step on the repo before asking a question.")
