@@ -50,15 +50,6 @@ class Assignables(commands.Cog):
         elif role_on == 1:
             await ctx.send("{} : Removed SysBot Updates role! You will no longer be notified of SysBot news!".format(ctx.author.mention))
 
-    @commands.command(name='togglenhse')
-    async def nhseupdates(self, ctx):
-        """Toggles the NHSEUpdates role"""
-        role_on = await self.handletoggle(ctx, "NHSEUpdates")
-        if role_on == 0:
-            await ctx.send("{} : Added NHSE Updates role! You will now be notified of any major NHSE news from now on!".format(ctx.author.mention))
-        elif role_on == 1:
-            await ctx.send("{} : Removed NHSE Updates role! You will no longer be notified of NHSE news!".format(ctx.author.mention))
-
     @commands.command(name='togglepkhex')
     async def pkhexupdates(self, ctx):
         """Toggles the PKHeXUpdates role"""
