@@ -10,6 +10,9 @@ from discord.ext import commands
 class Faq(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.faq_aliases = {}
+        with open('faq_aliases.json', 'r') as f:
+            self.faq_aliases = json.load(f)
         self.logger = logging.getLogger("porygon.{}".format(__name__))
 
     async def update_faq(self):
@@ -62,6 +65,26 @@ class Faq(commands.Cog):
             json.dump(faq_db, f, indent=4)
         await ctx.send("✅ Entry added.")
         self.bot.loop.create_task(self.update_faq())
+
+    @faq.command()
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    async def alias(self, ctx, word: str, faq_id: int = 0):
+        if faq_id == 0:
+            return await ctx.send("⚠ FAQ entry ID is required.")
+        self.faq_aliases[word] = faq_id
+        with open("faq_aliases.json", "w") as f:
+            json.dump(self.faq_aliases, f, indent=4)
+        await ctx.send("✅ Alias added/updated.")
+
+    @faq.command()
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    async def delalias(self, ctx, word: str):
+        if word not in self.faq_aliases:
+            return await ctx.send("⚠ FAQ alias does not exist.")
+        del self.faq_aliases[word]
+        with open("faq_aliases.json", "w") as f:
+            json.dump(self.faq_aliases, f, indent=4)
+        await ctx.send("✅ Alias removed.")
 
     @faq.command(aliases=['del'])
     @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
@@ -135,7 +158,13 @@ class Faq(commands.Cog):
         await ctx.send("```\n{}\n```".format(msg))
 
     @faq.command(aliases=['display'])
-    async def view(self, ctx, faq_id: int = 0):
+    async def view(self, ctx, faq_req):
+        if faq_req.isnumeric():
+            faq_id = int(faq_req)
+        elif faq_req in self.faq_aliases:
+            faq_id = self.faq_aliases[faq_req]
+        else:
+            return await ctx.send("⚠ No such entry exists.")
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
         with open("faq.json", "r") as f:
