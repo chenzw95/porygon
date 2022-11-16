@@ -40,7 +40,7 @@ class Faq(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
     async def add(self, ctx):
         random_num = random.randint(1, 9999)
         await ctx.send("Type the question to be added after this message:\n(note: all questions are automatically underlined)\n\nType `abort-{:04d}` to abort.".format(random_num))
@@ -67,17 +67,18 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
-    async def alias(self, ctx, word: str, faq_id: int = 0):
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    async def alias(self, ctx, faq_id: int = 0, *, words: str = ""):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
-        self.faq_aliases[word] = faq_id
+        for word in words.strip().split():
+            self.faq_aliases[word] = faq_id
         with open("faq_aliases.json", "w") as f:
             json.dump(self.faq_aliases, f, indent=4)
         await ctx.send("✅ Alias added/updated.")
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
     async def delalias(self, ctx, word: str):
         if word not in self.faq_aliases:
             return await ctx.send("⚠ FAQ alias does not exist.")
@@ -86,8 +87,20 @@ class Faq(commands.Cog):
             json.dump(self.faq_aliases, f, indent=4)
         await ctx.send("✅ Alias removed.")
 
+    @faq.command()
+    async def listaliases(self, ctx, faq_id: int = 0):
+        if faq_id == 0:
+            return await ctx.send("⚠ FAQ entry ID is required.")
+        aliases = []
+        for word, faq in self.faq_aliases.items():
+            if faq == faq_id:
+                aliases.append(word)
+        if not aliases:
+            return await ctx.send("⚠ No aliases found.")
+        await ctx.send("Aliases for FAQ entry {}: {}".format(faq_id, ", ".join(aliases)))
+
     @faq.command(aliases=['del'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
     async def delete(self, ctx, faq_id: int = 0):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
@@ -103,7 +116,7 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command(aliases=['modify'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators")
+    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
     async def edit(self, ctx, faq_id: int = 0, edit_type: str = "a"):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
