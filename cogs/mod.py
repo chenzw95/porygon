@@ -36,6 +36,27 @@ class Mod(commands.Cog):
     def cog_unload(self):
         self.expiry_task.cancel()
 
+    def countermemes(self, reason):
+        # counter memes
+        tracked_counters = []
+        for key in self.counters:
+            if key == 'kick':
+                continue
+            if key.lower() in reason.lower() or key.lower().replace('rule ', 'r') in reason.lower():
+                self.counters[key] += 1
+                tracked_counters.append(key)
+        with open('counters.json', 'w') as f:
+            json.dump(self.counters, f)
+            
+        counter_msg = ""
+        for key in tracked_counters:
+            if key == 'kick':
+                continue
+            ct = self.counters[key]
+            ct += "th" if 11 <= ct % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(ct % 10, "th")
+            counter_msg += "This is the {} user that has been banned for a {} violation.\n".format(ct, key)
+        return counter_msg
+
     async def check_expiry(self):
         await self.bot.wait_for_setup()
         while not self.bot.is_closed():
@@ -476,23 +497,15 @@ class Mod(commands.Cog):
         except discord.Forbidden:
             pass  # DMs disabled by user
         await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-        if 'rule 13' in reason.lower():
-            self.counters['rule13'] = self.counters.get('rule13', 0) + 1
-            with open('counters.json', 'w') as f:
-                json.dump(self.counters, f)
         return_msg = "Banned user: {}".format(user.mention)
         if reason:
             return_msg += " for reason `{}`".format(reason)
             embed.add_field(name="Reason", value=reason)
         return_msg += "."
         await ctx.send(return_msg)
-
-        # counter memes
-        if 'rule 13' in reason.lower():
-            ct = self.counters.get('rule13', 0)
-            ct += "th" if 11 <= ct % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(ct % 10, "th")
-            await ctx.send("This is the {} user that has been banned for a Rule 13 violation.".format(ct))
-            
+        ctr_msg = self.countermemes(reason)
+        if ctr_msg:
+            await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
