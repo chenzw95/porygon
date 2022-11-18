@@ -1,20 +1,20 @@
 # pylint: disable=no-value-for-parameter
 import asyncio
-import logging
-import re
 import json
-import time
+import logging
 import os
+import re
+import subprocess
+import time
 from datetime import datetime, timedelta
 
 import discord
+from database import restrictions_tbl
 from discord.ext import commands
 from discord.ext.commands import BucketType
-from sqlalchemy.dialects.mysql import insert
 from sqlalchemy import null
-import subprocess
+from sqlalchemy.dialects.mysql import insert
 
-from database import restrictions_tbl
 from .utils import checks
 
 
@@ -24,11 +24,9 @@ class Mod(commands.Cog):
         self.session_banlist = set()
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
-        with open("kick_counter.txt", "r") as f:
-            try:
-                self.kick_counter = int(f.read())
-            except ValueError:
-                self.kick_counter = 0
+        self.counters = {}
+        with open('counters.json', 'r') as f:
+            self.counters = json.load(f)
         if not os.path.exists("whitelisted_guild_ids.json"):
             with open("whitelisted_guild_ids.json", "w") as file:
                 json.dump([], file, indent=4)
@@ -406,9 +404,9 @@ class Mod(commands.Cog):
                     # DMs disabled by user
                     pass
                 await member.kick(reason=reason)
-                self.kick_counter += 1
-                with open("kick_counter.txt", "w") as f:
-                    f.write(str(self.kick_counter))
+                self.counters['kick'] = self.counters.get('kick', 0) + 1
+                with open("counters.json", "w") as f:
+                    json.dump(self.counters, f)
                 return_msg = "Kicked user: {}".format(member.mention)
                 if reason:
                     return_msg += " for reason `{}`".format(reason)
@@ -448,9 +446,9 @@ class Mod(commands.Cog):
                     pass
                 if warn_count < 5:
                     await member.kick(reason=reason)
-                    self.kick_counter += 1
-                    with open("kick_counter.txt", "w") as f:
-                        f.write(str(self.kick_counter))
+                    self.counters['kick'] = self.counters.get('kick', 0) + 1
+                    with open("counters.json", "w") as f:
+                        json.dump(self.counters, f)
                     return_msg = "Kicked user: {}".format(member.mention)
                 else:
                     await member.ban(reason=reason, delete_message_days=0)
@@ -478,12 +476,23 @@ class Mod(commands.Cog):
         except discord.Forbidden:
             pass  # DMs disabled by user
         await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+        if 'rule 13' in reason.lower():
+            self.counters['rule13'] = self.counters.get('rule13', 0) + 1
+            with open('counters.json', 'w') as f:
+                json.dump(self.counters, f)
         return_msg = "Banned user: {}".format(user.mention)
         if reason:
             return_msg += " for reason `{}`".format(reason)
             embed.add_field(name="Reason", value=reason)
         return_msg += "."
         await ctx.send(return_msg)
+
+        # counter memes
+        if 'rule 13' in reason.lower():
+            ct = self.counters.get('rule13', 0)
+            ct += "th" if 11 <= ct % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(ct % 10, "th")
+            await ctx.send("This is the {} user that has been banned for a Rule 13 violation.".format(ct))
+            
         await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
