@@ -357,6 +357,9 @@ class Mod(commands.Cog):
         if reason != "":
             msg += " The given reason is : " + reason
         await ctx.send(msg)
+        ctr_msg = self.countermemes(reason)
+        if ctr_msg:
+            await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(msg)
     
     @commands.command(name="delwarn")
