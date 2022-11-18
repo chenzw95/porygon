@@ -54,7 +54,7 @@ class Mod(commands.Cog):
                 continue
             ct = self.counters[key]
             ct = str(ct) + ("th" if 11 <= ct % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(ct % 10, "th"))
-            counter_msg += "This is the {} user that has been banned for a {} violation.\n".format(ct, key)
+            counter_msg += "This is the {} user that has been penalized for a {} violation.\n".format(ct, key)
         return counter_msg
 
     async def check_expiry(self):
@@ -434,6 +434,9 @@ class Mod(commands.Cog):
                     embed.add_field(name="Reason", value=reason)
                 return_msg += "."
                 await ctx.send(return_msg)
+                ctr_msg = self.countermemes(reason)
+                if ctr_msg:
+                    await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
                 
     @commands.command()
@@ -479,6 +482,9 @@ class Mod(commands.Cog):
                     embed.add_field(name="Reason", value=reason)
                 return_msg += " | **Warned**: {} warned {} (warn #{}) | {}".format(author.name, member.mention, warn_count, str(member))
                 await ctx.send(return_msg)
+                ctr_msg = self.countermemes(reason)
+                if ctr_msg:
+                    await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
@@ -675,6 +681,15 @@ class Mod(commands.Cog):
         """Pulls the latest changes from the git repo"""
         out = subprocess.Popen('git pull', stdout=subprocess.PIPE, shell=True)
         await ctx.send(out.communicate()[0].decode("utf-8"))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_any_role("Moderators", "aww")
+    async def newcounter(self, ctx, name):
+        self.counters[name] = 0
+        with open("counters.json", "w") as f:
+            json.dump(self.counters, f)
+        await ctx.send(f"Created/Reset counter `{name}`.")
 
     @kick.error
     @ban.error
