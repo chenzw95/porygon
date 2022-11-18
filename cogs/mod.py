@@ -689,10 +689,19 @@ class Mod(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def newcounter(self, ctx, name):
+        for k in self.counters:
+            if k.lower() == name.lower():
+                del self.counters[k]
         self.counters[name] = 0
         with open("counters.json", "w") as f:
             json.dump(self.counters, f)
         await ctx.send(f"Created/Reset counter `{name}`.")
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_any_role("Moderators", "aww")
+    async def listcounters(self, ctx):
+        await ctx.send(f"List of tracked penalty counters: `{','.join(self.counters.keys())}`.")
 
     @kick.error
     @ban.error
