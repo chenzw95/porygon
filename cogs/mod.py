@@ -701,7 +701,7 @@ class Mod(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def listcounters(self, ctx):
-        await ctx.send(f"List of tracked penalty counters: `{','.join(self.counters.keys())}`.")
+        await ctx.send(f"List of tracked penalty counters: `{', '.join(self.counters.keys())}`.")
 
     @kick.error
     @ban.error
