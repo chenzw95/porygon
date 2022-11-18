@@ -53,7 +53,7 @@ class Mod(commands.Cog):
             if key == 'kick':
                 continue
             ct = self.counters[key]
-            ct += "th" if 11 <= ct % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(ct % 10, "th")
+            ct = str(ct) + ("th" if 11 <= ct % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(ct % 10, "th"))
             counter_msg += "This is the {} user that has been banned for a {} violation.\n".format(ct, key)
         return counter_msg
 
