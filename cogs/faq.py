@@ -34,7 +34,6 @@ class Faq(commands.Cog):
         counter = 0
         predicate = lambda m: m.author == self.bot.user
         async for message in self.bot.faq_channel.history(limit=100, oldest_first=True).filter(predicate):
-            if message.embed
             if counter < len(messages):
                 if message.embeds and message.embeds[0].title == messages[counter].title \
                     and message.embeds[0].description == messages[counter].description \
