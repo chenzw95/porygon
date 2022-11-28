@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import random
+import time
 
 import discord
 from discord.ext import commands
@@ -23,6 +24,12 @@ class Faq(commands.Cog):
             embed = discord.Embed(color=discord.Color.red())
             embed.title = "Q{}. {}".format(faq_id, entry[0])
             embed.description = entry[1]
+            aliases = []
+            for word, faq in self.faq_aliases.items():
+                if faq == faq_id:
+                    aliases.append(word)
+            if aliases:
+                embed.set_footer(text="Aliases: " + ", ".join(aliases))
             messages.append(embed)
         counter = 0
         predicate = lambda m: m.author == self.bot.user
@@ -33,6 +40,7 @@ class Faq(commands.Cog):
             else:
                 await message.delete()
         for message in messages[counter:]:
+            time.sleep(2) # avoid rate limits
             await self.bot.faq_channel.send(embed=message)
 
     @commands.group(invoke_without_command=True)
