@@ -35,6 +35,7 @@ class Faq(commands.Cog):
         predicate = lambda m: m.author == self.bot.user
         async for message in self.bot.faq_channel.history(limit=100, oldest_first=True).filter(predicate):
             if counter < len(messages):
+                time.sleep(2) # avoid rate limits
                 await message.edit(embed=messages[counter])
                 counter += 1
             else:
