@@ -124,6 +124,13 @@ class Faq(commands.Cog):
             faq_db = json.load(f)
         try:
             faq_db.pop(faq_id-1)
+            for word, faq in self.faq_aliases.items():
+                if faq == faq_id:
+                    del self.faq_aliases[word]
+                if faq > faq_id:
+                    self.faq_aliases[word] = faq - 1
+            with open("faq_aliases.json", "w") as f:
+                json.dump(self.faq_aliases, f, indent=4)
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         with open("faq.json", "w") as f:
