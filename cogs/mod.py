@@ -388,7 +388,7 @@ class Mod(commands.Cog):
     @commands.command()
     @checks.check_permissions_or_owner(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    async def kick(self, ctx, member: discord.Member, *, reason: str = None):
+    async def kick(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
         """Kicks a member."""
         author = ctx.message.author
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
@@ -410,9 +410,8 @@ class Mod(commands.Cog):
                 with open("kick_counter.txt", "w") as f:
                     f.write(str(self.kick_counter))
                 return_msg = "Kicked user: {}".format(member.mention)
-                if reason:
-                    return_msg += " for reason `{}`".format(reason)
-                    embed.add_field(name="Reason", value=reason)
+                return_msg += " for reason `{}`".format(reason)
+                embed.add_field(name="Reason", value=reason)
                 return_msg += "."
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
@@ -420,7 +419,7 @@ class Mod(commands.Cog):
     @commands.command()
     @checks.check_permissions_or_owner(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    async def kickwarn(self, ctx, member: discord.Member, *, reason: str = None):
+    async def kickwarn(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
         """Kicks a member."""
         author = ctx.message.author
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at)
@@ -455,9 +454,8 @@ class Mod(commands.Cog):
                 else:
                     await member.ban(reason=reason, delete_message_days=0)
                     return_msg = "Banned user: {}".format(member.mention)
-                if reason:
-                    return_msg += " for reason `{}`".format(reason)
-                    embed.add_field(name="Reason", value=reason)
+                return_msg += " for reason `{}`".format(reason)
+                embed.add_field(name="Reason", value=reason)
                 return_msg += " | **Warned**: {} warned {} (warn #{}) | {}".format(author.name, member.mention, warn_count, str(member))
                 await ctx.send(return_msg)
                 await self.bot.modlog_channel.send(embed=embed)
@@ -465,7 +463,7 @@ class Mod(commands.Cog):
     @commands.command()
     @checks.check_permissions_or_owner(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    async def ban(self, ctx, user: discord.User, *, reason: str = None):
+    async def ban(self, ctx, user: discord.User, *, reason: str = "No reason given."):
         """Bans a member/user."""
         embed = discord.Embed(color=discord.Color.red(), timestamp=ctx.message.created_at, title="<:banhammer:437900519822852096> Banned member")
         embed.add_field(name="User", value="{} ({})".format(user.mention, user))
@@ -479,9 +477,8 @@ class Mod(commands.Cog):
             pass  # DMs disabled by user
         await ctx.guild.ban(user, reason=reason, delete_message_days=0)
         return_msg = "Banned user: {}".format(user.mention)
-        if reason:
-            return_msg += " for reason `{}`".format(reason)
-            embed.add_field(name="Reason", value=reason)
+        return_msg += " for reason `{}`".format(reason)
+        embed.add_field(name="Reason", value=reason)
         return_msg += "."
         await ctx.send(return_msg)
         await self.bot.modlog_channel.send(embed=embed)
@@ -489,7 +486,7 @@ class Mod(commands.Cog):
     @commands.command()
     @checks.check_permissions_or_owner(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    async def hackban(self, ctx, user_id: int, *, reason: str = None):
+    async def hackban(self, ctx, user_id: int, *, reason: str = "No reason given."):
         user = await self.bot.fetch_user(user_id)
         if user:
             await self.ban(ctx, user, reason=reason)
@@ -497,7 +494,7 @@ class Mod(commands.Cog):
     @commands.command()
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
-    async def mute(self, ctx, member: discord.Member, *, reason: str = None):
+    async def mute(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
         """Mutes a member permanently."""
         if ctx.author.top_role.position < member.top_role.position + 1:
             return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
@@ -509,15 +506,13 @@ class Mod(commands.Cog):
         embed.add_field(name="Member", value=member.mention).add_field(name="Member ID", value=member.id)
         embed.add_field(name="Action taken by", value=ctx.author.name)
         embed.add_field(name="Duration", value="Indefinite")
-        if not reason:
-            reason = "*no reason specified*"
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command(aliases=['tmute', 'timemute'])
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
-    async def timedmute(self, ctx, member: discord.Member, duration, *, reason: str = None):
+    async def timedmute(self, ctx, member: discord.Member, duration, *, reason: str = "No reason given."):
         """Mutes a member temporarily."""
         if ctx.author.top_role.position < member.top_role.position + 1:
             return await ctx.send("⚠ Operation failed!\nThis cannot be allowed as you are not above the member in role hierarchy.")
@@ -549,8 +544,6 @@ class Mod(commands.Cog):
         embed.add_field(name="Action taken by", value=ctx.author.name)
         embed.add_field(name="Duration", value=duration_text)
         embed.add_field(name="Expiry", value="{:%A, %d. %B %Y @ %H:%M:%S}".format(expiry))
-        if not reason:
-            reason = "*no reason specified*"
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
