@@ -1,20 +1,20 @@
 # pylint: disable=no-value-for-parameter
 import asyncio
-import logging
-import re
 import json
-import time
+import logging
 import os
+import re
+import subprocess
+import time
 from datetime import datetime, timedelta
 
 import discord
+from database import restrictions_tbl
 from discord.ext import commands
 from discord.ext.commands import BucketType
-from sqlalchemy.dialects.mysql import insert
 from sqlalchemy import null
-import subprocess
+from sqlalchemy.dialects.mysql import insert
 
-from database import restrictions_tbl
 from .utils import checks
 
 
@@ -24,11 +24,9 @@ class Mod(commands.Cog):
         self.session_banlist = set()
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
-        with open("kick_counter.txt", "r") as f:
-            try:
-                self.kick_counter = int(f.read())
-            except ValueError:
-                self.kick_counter = 0
+        self.counters = {}
+        with open('counters.json', 'r') as f:
+            self.counters = json.load(f)
         if not os.path.exists("whitelisted_guild_ids.json"):
             with open("whitelisted_guild_ids.json", "w") as file:
                 json.dump([], file, indent=4)
@@ -37,6 +35,27 @@ class Mod(commands.Cog):
 
     def cog_unload(self):
         self.expiry_task.cancel()
+
+    def countermemes(self, reason):
+        # counter memes
+        tracked_counters = []
+        for key in self.counters:
+            if key == 'kick':
+                continue
+            if key.lower() in reason.lower() or key.lower().replace('rule ', 'r') in reason.lower():
+                self.counters[key] += 1
+                tracked_counters.append(key)
+        with open('counters.json', 'w') as f:
+            json.dump(self.counters, f)
+            
+        counter_msg = ""
+        for key in tracked_counters:
+            if key == 'kick':
+                continue
+            ct = self.counters[key]
+            ct = str(ct) + ("th" if 11 <= ct % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(ct % 10, "th"))
+            counter_msg += "This is the {} user that has been penalized for a {} violation.\n".format(ct, key)
+        return counter_msg
 
     async def check_expiry(self):
         await self.bot.wait_for_setup()
@@ -338,6 +357,9 @@ class Mod(commands.Cog):
         if reason != "":
             msg += " The given reason is : " + reason
         await ctx.send(msg)
+        ctr_msg = self.countermemes(reason)
+        if ctr_msg:
+            await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(msg)
     
     @commands.command(name="delwarn")
@@ -406,14 +428,17 @@ class Mod(commands.Cog):
                     # DMs disabled by user
                     pass
                 await member.kick(reason=reason)
-                self.kick_counter += 1
-                with open("kick_counter.txt", "w") as f:
-                    f.write(str(self.kick_counter))
+                self.counters['kick'] = self.counters.get('kick', 0) + 1
+                with open("counters.json", "w") as f:
+                    json.dump(self.counters, f)
                 return_msg = "Kicked user: {}".format(member.mention)
                 return_msg += " for reason `{}`".format(reason)
                 embed.add_field(name="Reason", value=reason)
                 return_msg += "."
                 await ctx.send(return_msg)
+                ctr_msg = self.countermemes(reason)
+                if ctr_msg:
+                    await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
                 
     @commands.command()
@@ -447,9 +472,9 @@ class Mod(commands.Cog):
                     pass
                 if warn_count < 5:
                     await member.kick(reason=reason)
-                    self.kick_counter += 1
-                    with open("kick_counter.txt", "w") as f:
-                        f.write(str(self.kick_counter))
+                    self.counters['kick'] = self.counters.get('kick', 0) + 1
+                    with open("counters.json", "w") as f:
+                        json.dump(self.counters, f)
                     return_msg = "Kicked user: {}".format(member.mention)
                 else:
                     await member.ban(reason=reason, delete_message_days=0)
@@ -458,6 +483,9 @@ class Mod(commands.Cog):
                 embed.add_field(name="Reason", value=reason)
                 return_msg += " | **Warned**: {} warned {} (warn #{}) | {}".format(author.name, member.mention, warn_count, str(member))
                 await ctx.send(return_msg)
+                ctr_msg = self.countermemes(reason)
+                if ctr_msg:
+                    await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
@@ -481,6 +509,9 @@ class Mod(commands.Cog):
         embed.add_field(name="Reason", value=reason)
         return_msg += "."
         await ctx.send(return_msg)
+        ctr_msg = self.countermemes(reason)
+        if ctr_msg:
+            await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(embed=embed)
 
     @commands.command()
@@ -646,6 +677,24 @@ class Mod(commands.Cog):
         """Pulls the latest changes from the git repo"""
         out = subprocess.Popen('git pull', stdout=subprocess.PIPE, shell=True)
         await ctx.send(out.communicate()[0].decode("utf-8"))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_any_role("Moderators", "aww")
+    async def newcounter(self, ctx, name):
+        for k in self.counters:
+            if k.lower() == name.lower():
+                del self.counters[k]
+        self.counters[name] = 0
+        with open("counters.json", "w") as f:
+            json.dump(self.counters, f)
+        await ctx.send(f"Created/Reset counter `{name}`.")
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_any_role("Moderators", "aww")
+    async def listcounters(self, ctx):
+        await ctx.send(f"List of tracked penalty counters: `{', '.join(self.counters.keys())}`.")
 
     @kick.error
     @ban.error
