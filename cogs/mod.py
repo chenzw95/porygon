@@ -294,14 +294,14 @@ class Mod(commands.Cog):
         # check if a lock already exists and delete
         if ctx.channel.id in self.locks:
             r_id, _ = self.locks[ctx.channel.id]
-            prev_role = discord.utils.get(guild.roles, id=r_id)
+            prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
             if prev_role:
                 await ctx.channel.set_permissions(prev_role, overwrite=None)
         
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
         overwrite.read_messages = None
-        await ctx.channel.set_permissions(discord.utils.get(guild.roles, name="@everyone"), overwrite=overwrite)
+        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
         overwrite.send_messages = True
         await ctx.channel.set_permissions(role, overwrite=overwrite)
         self.locks[ctx.channel.id] = [role.id, phrase]
@@ -320,7 +320,7 @@ class Mod(commands.Cog):
             return
         for i, v in enumerate(self.locks):
             r, p = v
-            r = discord.utils.get(guild.roles, id=r)
+            r = discord.utils.get(ctx.guild.roles, id=r)
             if phrase == p and r not in ctx.author.roles:
                 await ctx.author.add_roles(r)
                 await ctx.send(f"✅ Unlocked channel <#{i}>")
@@ -334,8 +334,8 @@ class Mod(commands.Cog):
             return
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = None
-        await ctx.channel.set_permissions(discord.utils.get(guild.roles, name="@everyone"), overwrite=overwrite)
-        await ctx.channel.set_permissions(discord.utils.get(guild.roles, id=self.locks[ctx.channel.id][0]), overwrite=None)
+        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
+        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[ctx.channel.id][0]), overwrite=None)
         del self.locks[ctx.channel.id]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
