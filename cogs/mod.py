@@ -315,6 +315,7 @@ class Mod(commands.Cog):
     async def unlock(self, ctx, phrase: str):
         """Unlocks a channel based on the phrase used"""
         await ctx.message.delete()
+        valid_pass_bool = False
         if ctx.channel.id != 429185857346338827:
             await ctx.send("This command can only be used in <#429185857346338827>")
             return
@@ -322,9 +323,11 @@ class Mod(commands.Cog):
             r, p = v
             r = discord.utils.get(ctx.guild.roles, id=r)
             if phrase == p and r not in ctx.author.roles:
+                valid_pass_bool = True
                 await ctx.author.add_roles(r)
-                return await ctx.send(f"✅ {ctx.author.mention} Unlocked channel <#{i}>.")
-        await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
+                await ctx.send(f"✅ {ctx.author.mention} Unlocked channel <#{i}>.")
+        if not valid_pass_bool:
+            await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
     
     @commands.command(name="dellock")
     @commands.guild_only()
