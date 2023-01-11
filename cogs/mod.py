@@ -25,8 +25,11 @@ class Mod(commands.Cog):
         self.logger = logging.getLogger("porygon.{}".format(__name__))
         self.expiry_task = bot.loop.create_task(self.check_expiry())
         self.counters = {}
+        self.locks = {}
         with open('counters.json', 'r') as f:
             self.counters = json.load(f)
+        with open("locks.json", "r") as f:
+            self.locks = json.load(f)
         if not os.path.exists("whitelisted_guild_ids.json"):
             with open("whitelisted_guild_ids.json", "w") as file:
                 json.dump([], file, indent=4)
@@ -282,6 +285,61 @@ class Mod(commands.Cog):
                 await ctx.send("{} : {} already has this role!".format(ctx.author.mention, member.name))
         else:
             await ctx.send("⚠ Unrecognised role!")
+            
+    @commands.command(name="lock")
+    @commands.guild_only()
+    @commands.has_any_role("Moderators")
+    async def lock(self, ctx, role: discord.Role, phrase: str):
+        """Locks a channel to a specific role for access, unlock via the phrase and unlock commands"""
+        # check if a lock already exists and delete
+        if ctx.channel.id in self.locks:
+            r_id, _ = self.locks[ctx.channel.id]
+            prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
+            if prev_role:
+                await ctx.channel.set_permissions(prev_role, overwrite=None)
+        
+        overwrite = discord.PermissionOverwrite()
+        overwrite.send_messages = False
+        overwrite.read_messages = None
+        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
+        overwrite.send_messages = True
+        await ctx.channel.set_permissions(role, overwrite=overwrite)
+        self.locks[ctx.channel.id] = [role.id, phrase]
+        with open("locks.json", "w") as f:
+            json.dump(self.locks, f)
+        await ctx.message.delete()
+        await ctx.send("🔒 Locked channel with a secret phrase. Use unlock command in <#429185857346338827> to unlock the channel.")
+        
+    @commands.command(name="unlock")
+    @commands.guild_only()
+    async def unlock(self, ctx, phrase:str):
+        """Unlocks a channel based on the phrase used"""
+        await ctx.message.delete()
+        if ctx.channel.id != 429185857346338827:
+            await ctx.send("This command can only be used in <#429185857346338827>")
+            return
+        for i, v in self.locks.items():
+            r, p = v
+            r = discord.utils.get(ctx.guild.roles, id=r)
+            if phrase == p and r not in ctx.author.roles:
+                await ctx.author.add_roles(r)
+                await ctx.send(f"✅ Unlocked channel <#{i}>")
+    
+    @commands.command(name="dellock")
+    @commands.guild_only()
+    @commands.has_any_role("Moderators")
+    async def dellock(self, ctx):
+        if ctx.channel.id not in self.locks:
+            await ctx.send("Current channel is already unrestricted")
+            return
+        overwrite = discord.PermissionOverwrite()
+        overwrite.send_messages = None
+        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
+        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[ctx.channel.id][0]), overwrite=None)
+        del self.locks[ctx.channel.id]
+        with open("locks.json", "w") as f:
+            json.dump(self.locks, f)
+        await ctx.send("Restrictions from this channel have been lifted")
 
     @commands.command(name="listwarns")
     @commands.guild_only()
@@ -725,6 +783,12 @@ class Mod(commands.Cog):
             if ctx.command:
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
             self.logger.exception(error, exc_info=error)
+            
+    @lock.error
+    @unlock.error
+    @dellock.error
+    async def lock_error_handler(self, ctx, error):
+        await ctx.send(f"An error occured while locking: {error}")
 
 
 def setup(bot):
