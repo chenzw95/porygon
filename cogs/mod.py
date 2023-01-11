@@ -308,11 +308,11 @@ class Mod(commands.Cog):
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
         await ctx.message.delete()
-        await ctx.send("🔒 Locked channel with a secret phrase. Use unlock command in <#429185857346338827> to unlock the channel.")
+        await ctx.send("🔒 Locked channel with a secret phrase. Users can use the unlock command in <#429185857346338827> to access the channel.")
         
     @commands.command(name="unlock")
     @commands.guild_only()
-    async def unlock(self, ctx, phrase:str):
+    async def unlock(self, ctx, phrase: str):
         """Unlocks a channel based on the phrase used"""
         await ctx.message.delete()
         if ctx.channel.id != 429185857346338827:
@@ -323,7 +323,8 @@ class Mod(commands.Cog):
             r = discord.utils.get(ctx.guild.roles, id=r)
             if phrase == p and r not in ctx.author.roles:
                 await ctx.author.add_roles(r)
-                await ctx.send(f"✅ Unlocked channel <#{i}>")
+                return await ctx.send(f"✅ {ctx.author.mention} Unlocked channel <#{i}>.")
+        await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
     
     @commands.command(name="dellock")
     @commands.guild_only()
@@ -339,7 +340,7 @@ class Mod(commands.Cog):
         del self.locks[ctx.channel.id]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
-        await ctx.send("Restrictions from this channel have been lifted")
+        await ctx.send("This channel is no longer role locked.")
 
     @commands.command(name="listwarns")
     @commands.guild_only()
