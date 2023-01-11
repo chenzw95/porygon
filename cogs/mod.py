@@ -318,7 +318,7 @@ class Mod(commands.Cog):
         if ctx.channel.id != 429185857346338827:
             await ctx.send("This command can only be used in <#429185857346338827>")
             return
-        for i, v in enumerate(self.locks):
+        for i, v in self.locks.items():
             r, p = v
             r = discord.utils.get(ctx.guild.roles, id=r)
             if phrase == p and r not in ctx.author.roles:
