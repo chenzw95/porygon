@@ -292,8 +292,8 @@ class Mod(commands.Cog):
     async def lock(self, ctx, role: discord.Role, phrase: str):
         """Locks a channel to a specific role for access, unlock via the phrase and unlock commands"""
         # check if a lock already exists and delete
-        if ctx.channel.id in self.locks:
-            r_id, _ = self.locks[ctx.channel.id]
+        if str(ctx.channel.id) in self.locks:
+            r_id, _ = self.locks[str(ctx.channel.id)]
             prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
             if prev_role:
                 await ctx.channel.set_permissions(prev_role, overwrite=None)
@@ -304,17 +304,18 @@ class Mod(commands.Cog):
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
         overwrite.send_messages = True
         await ctx.channel.set_permissions(role, overwrite=overwrite)
-        self.locks[ctx.channel.id] = [role.id, phrase]
+        self.locks[str(ctx.channel.id)] = [role.id, phrase]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
         await ctx.message.delete()
-        await ctx.send("🔒 Locked channel with a secret phrase. Use unlock command in <#429185857346338827> to unlock the channel.")
+        await ctx.send("🔒 Locked channel with a secret phrase. Users can use the unlock command in <#429185857346338827> to access the channel.")
         
     @commands.command(name="unlock")
     @commands.guild_only()
-    async def unlock(self, ctx, phrase:str):
+    async def unlock(self, ctx, phrase: str):
         """Unlocks a channel based on the phrase used"""
         await ctx.message.delete()
+        valid_pass_bool = False
         if ctx.channel.id != 429185857346338827:
             await ctx.send("This command can only be used in <#429185857346338827>")
             return
@@ -322,24 +323,26 @@ class Mod(commands.Cog):
             r, p = v
             r = discord.utils.get(ctx.guild.roles, id=r)
             if phrase == p and r not in ctx.author.roles:
+                valid_pass_bool = True
                 await ctx.author.add_roles(r)
-                await ctx.send(f"✅ Unlocked channel <#{i}>")
+                await ctx.send(f"✅ {ctx.author.mention} Unlocked channel <#{i}>.")
+        if not valid_pass_bool:
+            await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
     
     @commands.command(name="dellock")
     @commands.guild_only()
     @commands.has_any_role("Moderators")
     async def dellock(self, ctx):
-        if ctx.channel.id not in self.locks:
-            await ctx.send("Current channel is already unrestricted")
-            return
+        if str(ctx.channel.id) not in self.locks:
+            return await ctx.send("This channel is already unrestricted.")
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = None
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[ctx.channel.id][0]), overwrite=None)
-        del self.locks[ctx.channel.id]
+        del self.locks[str(ctx.channel.id)]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
-        await ctx.send("Restrictions from this channel have been lifted")
+        await ctx.send("This channel is no longer role locked.")
 
     @commands.command(name="listwarns")
     @commands.guild_only()
