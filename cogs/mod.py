@@ -300,7 +300,7 @@ class Mod(commands.Cog):
         
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
-        overwrite.read_messages = True
+        overwrite.read_messages = None
         await ctx.channel.set_permissions(discord.utils.get(guild.roles, name="@everyone"), overwrite=overwrite)
         overwrite.send_messages = True
         await ctx.channel.set_permissions(role, overwrite=overwrite)
@@ -332,6 +332,10 @@ class Mod(commands.Cog):
         if ctx.channel.id not in self.locks:
             await ctx.send("Current channel is already unrestricted")
             return
+        overwrite = discord.PermissionOverwrite()
+        overwrite.send_messages = None
+        await ctx.channel.set_permissions(discord.utils.get(guild.roles, name="@everyone"), overwrite=overwrite)
+        await ctx.channel.set_permissions(discord.utils.get(guild.roles, id=self.locks[ctx.channel.id][0]), overwrite=None)
         del self.locks[ctx.channel.id]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
@@ -779,6 +783,12 @@ class Mod(commands.Cog):
             if ctx.command:
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
             self.logger.exception(error, exc_info=error)
+            
+    @lock.error
+    @unlock.error
+    @dellock.error
+    async def lock_error_handler(self, ctx, error):
+        await ctx.send(f"An error occured while locking: {error}")
 
 
 def setup(bot):
