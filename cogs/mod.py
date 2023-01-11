@@ -292,8 +292,8 @@ class Mod(commands.Cog):
     async def lock(self, ctx, role: discord.Role, phrase: str):
         """Locks a channel to a specific role for access, unlock via the phrase and unlock commands"""
         # check if a lock already exists and delete
-        if ctx.channel.id in self.locks:
-            r_id, _ = self.locks[ctx.channel.id]
+        if str(ctx.channel.id) in self.locks:
+            r_id, _ = self.locks[str(ctx.channel.id)]
             prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
             if prev_role:
                 await ctx.channel.set_permissions(prev_role, overwrite=None)
@@ -304,7 +304,7 @@ class Mod(commands.Cog):
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
         overwrite.send_messages = True
         await ctx.channel.set_permissions(role, overwrite=overwrite)
-        self.locks[ctx.channel.id] = [role.id, phrase]
+        self.locks[str(ctx.channel.id)] = [role.id, phrase]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
         await ctx.message.delete()
@@ -330,14 +330,13 @@ class Mod(commands.Cog):
     @commands.guild_only()
     @commands.has_any_role("Moderators")
     async def dellock(self, ctx):
-        if ctx.channel.id not in self.locks:
-            await ctx.send("Current channel is already unrestricted")
-            return
+        if str(ctx.channel.id) not in self.locks:
+            return await ctx.send("This channel is already unrestricted.")
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = None
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[ctx.channel.id][0]), overwrite=None)
-        del self.locks[ctx.channel.id]
+        del self.locks[str(ctx.channel.id)]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
         await ctx.send("This channel is no longer role locked.")
