@@ -326,7 +326,7 @@ class Mod(commands.Cog):
                 valid_pass_bool = True
                 await ctx.author.add_roles(r)
                 await ctx.send(f"✅ {ctx.author.mention} Unlocked channel <#{i}>.")
-            if phrase == p:
+            elif phrase == p:
                 valid_pass_bool = True
                 await ctx.send(f"⚠️ You already have access to <#{i}>.")
         if not valid_pass_bool:
