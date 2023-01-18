@@ -259,7 +259,7 @@ class Mod(commands.Cog):
             if invite.guild.id not in self.whitelisted_guild_ids and message.channel.id not in (683403876208083026, 683403966607786058):  # ID 683403876208083026 = #list-your-sysbot-server, ID 683403966607786058 = #sysbot-servers
                 await message.author.add_roles(self.bot.mute_role, reason="Posted non-whitelisted invite")
                 await message.delete()
-                return await self.bot.modlog_channel.send("Muted user posting a non-whitelisted invite : {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
+                return await self.bot.mod_channel.send("Muted user posting a non-whitelisted invite : {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
