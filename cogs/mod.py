@@ -251,7 +251,7 @@ class Mod(commands.Cog):
             await self.bot.modlog_channel.send("Banned potential russian site spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # invite filtering
-        msg_split = message.content.split(" ")
+        msg_split = message.content.replace("\n", " ").split(" ")
         for phrase in msg_split:
             if "discord." not in phrase:
                 continue
