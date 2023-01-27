@@ -17,6 +17,7 @@ class Starboard(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._message_cache = {}
+        self.channel_blacklist = [401017356333088771, 401014737040834570, 438356161218215937]
         self._star_queue = weakref.WeakValueDictionary()
 
     def star_gradient_colour(self, stars):
@@ -117,6 +118,8 @@ class Starboard(commands.Cog):
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if reaction.message.type != discord.MessageType.default:
+            return
+        if reaction.message.channel.id in self.channel_blacklist:
             return
         if str(reaction.emoji) != '⭐':
             return
