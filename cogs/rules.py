@@ -25,11 +25,18 @@ class Rules(commands.Cog):
         predicate = lambda m: m.author == self.bot.user
         async for message in self.bot.rules_channel.history(limit=100, oldest_first=True).filter(predicate):
             if counter < len(messages):
+                if message.embeds and message.embeds[0].title == messages[counter].title \
+                    and message.embeds[0].description == messages[counter].description \
+                    and message.embeds[0].footer.text == messages[counter].footer.text:
+                    counter += 1
+                    continue
+                time.sleep(2) # avoid rate limits
                 await message.edit(embed=messages[counter])
                 counter += 1
             else:
                 await message.delete()
         for message in messages[counter:]:
+            time.sleep(2) # avoid rate limits
             await self.bot.rules_channel.send(embed=message)
 
     @commands.group(invoke_without_command=True)
