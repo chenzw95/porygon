@@ -341,7 +341,7 @@ class Mod(commands.Cog):
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = None
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
-        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[ctx.channel.id][0]), overwrite=None)
+        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[str(ctx.channel.id)][0]), overwrite=None)
         del self.locks[str(ctx.channel.id)]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
