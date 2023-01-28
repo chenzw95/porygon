@@ -159,6 +159,7 @@ class Rules(commands.Cog):
 
     @rules.command()
     async def refresh(self, ctx):
+        await ctx.send("Refreshing rules...")
         self.bot.loop.create_task(self.update_rules())
 
 

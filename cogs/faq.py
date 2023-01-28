@@ -222,6 +222,7 @@ class Faq(commands.Cog):
 
     @faq.command()
     async def refresh(self, ctx):
+        await ctx.send("Refreshing FAQ...")
         self.bot.loop.create_task(self.update_faq())
 
 
