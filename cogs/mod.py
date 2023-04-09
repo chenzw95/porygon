@@ -263,28 +263,22 @@ class Mod(commands.Cog):
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
     @commands.has_any_role("Moderators")
-    async def promote(self, ctx, member: discord.Member, role: str):
-        """Adds Builder/ GitHub Contributor"""
-        if role.lower() in ["builder", "builders"]:
-            newrole = discord.utils.get(ctx.guild.roles, name="Builders")
-        if role.lower() in ["contributor", "contrib", "github"]:
-            newrole = discord.utils.get(ctx.guild.roles, name="GitHub Contributors")
-        if newrole:
-            if newrole not in member.roles:
-                embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
-                embed.title = "Role added"
-                embed.add_field(name="Target", value=member.mention)
-                embed.add_field(name="Role", value=newrole.name)
-                embed.add_field(name="Action taken by", value=ctx.author.name)
-                await member.add_roles(newrole)
-                embed.title = "Added {} role".format(newrole.name)
-                await ctx.send("{} : {} role has been added to you!".format(member.mention, newrole.name))
-                await self.bot.modlog_channel.send(embed=embed)
-            else:
-                await ctx.send("{} : {} already has this role!".format(ctx.author.mention, member.name))
+    async def promote(self, ctx, member: discord.Member):
+        """Adds GitHub Contributor"""
+        role = discord.utils.get(ctx.guild.roles, name="GitHub Contributors")
+        if role not in member.roles:
+            embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
+            embed.title = "Role added"
+            embed.add_field(name="Target", value=member.mention)
+            embed.add_field(name="Role", value=role.name)
+            embed.add_field(name="Action taken by", value=ctx.author.name)
+            await member.add_roles(role)
+            embed.title = "Added {} role".format(role.name)
+            await ctx.send("{} : {} role has been added to you!".format(member.mention, role.name))
+            await self.bot.modlog_channel.send(embed=embed)
         else:
-            await ctx.send("⚠ Unrecognised role!")
-            
+            await ctx.send("{} : {} already has this role!".format(ctx.author.mention, member.name))
+
     @commands.command(name="lock")
     @commands.guild_only()
     @commands.has_any_role("Moderators")

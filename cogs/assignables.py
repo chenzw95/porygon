@@ -32,14 +32,14 @@ class Assignables(commands.Cog):
             await ctx.author.remove_roles(burole)
             return 1
 
-    @commands.command(name='toggleplugins', aliases=['buildupdates'])
-    async def buildupdates(self, ctx):
+    @commands.command(aliases=['toggleplugins'])
+    async def pluginupdates(self, ctx):
         """Toggles the PluginsUpdates role"""
         role_on = await self.handletoggle(ctx, "PluginsUpdates")
         if role_on == 0:
-            await ctx.send("{} : Added Plugin Updates role! You will now be notified from now on when a new plugin build is released!".format(ctx.author.mention))
+            await ctx.send("{} : Added Plugin Updates role! You will now be notified of any major PKHeX-Plugins news from now on!".format(ctx.author.mention))
         elif role_on == 1:
-            await ctx.send("{} : Removed Plugin Updates role! You will no longer be notified from now on when a new plugin build is released!".format(ctx.author.mention))
+            await ctx.send("{} : Removed Plugin Updates role! You will no longer be notified of PKHeX-Plugins news!".format(ctx.author.mention))
 
     @commands.command(name='togglesysbot')
     async def sysbotupdates(self, ctx):

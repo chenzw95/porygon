@@ -53,7 +53,7 @@ class Faq(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def add(self, ctx):
         random_num = random.randint(1, 9999)
         await ctx.send("Type the question to be added after this message:\n(note: all questions are automatically underlined)\n\nType `abort-{:04d}` to abort.".format(random_num))
@@ -79,7 +79,7 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def alias(self, ctx, faq_id: int = 0, *, words: str = ""):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
@@ -91,7 +91,7 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def delalias(self, ctx, word: str):
         if word not in self.faq_aliases:
             return await ctx.send("⚠ FAQ alias does not exist.")
@@ -114,7 +114,7 @@ class Faq(commands.Cog):
         await ctx.send("Aliases for FAQ entry {}: {}".format(faq_id, ", ".join(aliases)))
 
     @faq.command(aliases=['del'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def delete(self, ctx, faq_id: int = 0):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
@@ -137,7 +137,7 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command(aliases=['modify'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def edit(self, ctx, faq_id: int = 0, edit_type: str = "a"):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")

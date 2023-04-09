@@ -14,7 +14,7 @@ class BuildCog(commands.Cog):
     @commands.guild_only()
     @commands.cooldown(rate=1, per=7200.0)
     @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "Development")
-    async def build(self, ctx, mgdb_commit: bool=False):
+    async def build(self, ctx, mgdb_commit: bool = False):
         """
         Initiates a new build on AppVeyor.
         """
@@ -24,7 +24,7 @@ class BuildCog(commands.Cog):
             header_dict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']), 'Content-Type': 'application/json'}
             req_body = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
             async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=header_dict,
-                                    json=req_body) as resp:
+                                             json=req_body) as resp:
                 if resp.status == 200:
                     await ctx.message.add_reaction("✅")
                     embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
@@ -48,12 +48,12 @@ class BuildCog(commands.Cog):
             return await ctx.send("🚫 MGDB Downloader behaviour is no longer determined at compile-time.")
         async with ctx.typing():
             header_dict = {'Authorization': 'Bearer {}'.format(self.bot.config['appveyor_token']),
-                          'Content-Type': 'application/json'}
+                           'Content-Type': 'application/json'}
             req_body = {"accountName": "architdate", "projectSlug": "pkhex-plugins", "branch": "master"}
             env_vars = {"notifyall": "false"}
             req_body["environmentVariables"] = env_vars
             async with self.bot.session.post('https://ci.appveyor.com/api/builds', headers=header_dict,
-                                    json=req_body) as resp:
+                                             json=req_body) as resp:
                 if resp.status == 200:
                     await ctx.message.add_reaction("✅")
                     embed = discord.Embed(color=discord.Color.gold(), timestamp=ctx.message.created_at)
@@ -64,9 +64,8 @@ class BuildCog(commands.Cog):
                     response = await resp.text()
                     self.logger.error("Build request returned HTTP {}: {}".format(resp.status, response))
                     await ctx.send("⚠️ Request failed. Details have been logged to console.")
-        check = lambda m: m.channel == self.bot.builds_channel and m.author.name == "BuildBot" and m.author.discriminator == "0000"
         try:
-            await self.bot.wait_for('message', check=check, timeout=300.0)
+            await self.bot.wait_for('message', check=(lambda m: m.channel == self.bot.builds_channel and m.author.name == "BuildBot" and m.author.discriminator == "0000"), timeout=300.0)
         except asyncio.TimeoutError:
             return await ctx.send("⚠ Failed to read build notification from AppVeyor.")
         try:
@@ -85,9 +84,8 @@ class BuildCog(commands.Cog):
                     ctx.message.author.roles, name="Moderators"):
                 await ctx.send("A build was last requested {:.0f} seconds ago. Rebuild anyway? `y/n`".format(
                     error.cooldown.per - error.retry_after))
-                check = lambda m: m.channel == ctx.message.channel and m.author == ctx.message.author
                 try:
-                    msg = await self.bot.wait_for('message', check=check, timeout=10.0)
+                    msg = await self.bot.wait_for('message', check=(lambda m: m.channel == ctx.message.channel and m.author == ctx.message.author), timeout=10.0)
                     if msg.content.lower() == "y":
                         await ctx.reinvoke()
                     else:
@@ -96,18 +94,9 @@ class BuildCog(commands.Cog):
                     await ctx.send("Timed out while waiting for a response.")
             else:
                 await ctx.send("This command is on cooldown (executed {:.0f} seconds ago). You will be able to use this command again in {:.0f} seconds.".format(
-                        error.cooldown.per - error.retry_after, error.retry_after))
+                    error.cooldown.per - error.retry_after, error.retry_after))
         elif isinstance(error, discord.ext.commands.CheckFailure):
             await ctx.send("{} You don't have permission to use this command.".format(ctx.message.author.mention))
-
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_any_role("GitHub Contributors", "Moderators", "Development")
-    async def togglenotify(self, ctx):
-        buildupdates = discord.utils.get(self.bot.main_server.roles, name="BuildUpdates")
-        mention_flag = not buildupdates.mentionable
-        await buildupdates.edit(mentionable=mention_flag, reason="Toggled by {}".format(ctx.author.name))
-        await ctx.send("✅ Toggled mentionable flag. New value: {}".format(mention_flag))
 
 
 def setup(bot):
