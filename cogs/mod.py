@@ -50,7 +50,7 @@ class Mod(commands.Cog):
                 tracked_counters.append(key)
         with open('counters.json', 'w') as f:
             json.dump(self.counters, f)
-            
+
         counter_msg = ""
         for key in tracked_counters:
             if key == 'kick':
@@ -105,7 +105,7 @@ class Mod(commands.Cog):
             rsts[str(member.id)] = {"warns": []}
         rsts[str(member.id)]["name"] = str(member)
         timestamp = time.strftime("%Y-%m-%d %H%M%S", time.localtime())
-        rsts[str(member.id)]["warns"].append({"issuer_id": issuer.id, "issuer_name":issuer.name, "reason":rst, "timestamp":timestamp})
+        rsts[str(member.id)]["warns"].append({"issuer_id": issuer.id, "issuer_name": issuer.name, "reason": rst, "timestamp": timestamp})
         with open("warnings.json", "w") as f:
             json.dump(rsts, f)
 
@@ -121,10 +121,10 @@ class Mod(commands.Cog):
             return -2
         if count < 1:
             return -3
-        warn = rsts[str(member.id)]["warns"][count-1]
+        warn = rsts[str(member.id)]["warns"][count - 1]
         embed = discord.Embed(color=discord.Color.dark_red(), title="Deleted Warn: {} on {}".format(count, warn["timestamp"]),
                               description="Issuer: {0[issuer_name]}\nReason: {0[reason]}".format(warn))
-        del rsts[str(member.id)]["warns"][count-1]
+        del rsts[str(member.id)]["warns"][count - 1]
         with open("warnings.json", "w") as f:
             json.dump(rsts, f)
         return embed
@@ -138,8 +138,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Joined at", value=member.joined_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         embed.add_field(name="Created at", value=member.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'))
         async with self.bot.engine.acquire() as conn:
-            query = restrictions_tbl.select().where((restrictions_tbl.c.user == member.id) & ((restrictions_tbl.c.expiry > datetime.utcnow()) |
-                                                                                              (restrictions_tbl.c.expiry == None)))  # pylint: disable=singleton-comparison
+            query = restrictions_tbl.select().where((restrictions_tbl.c.user == member.id) & ((restrictions_tbl.c.expiry > datetime.utcnow()) | (restrictions_tbl.c.expiry is None)))  # pylint: disable=singleton-comparison
             re_add = []
             async for row in conn.execute(query):
                 re_add.append(getattr(self.bot, "{}_role".format(row.type), None))
@@ -172,7 +171,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.guild == None and message.author.id != self.bot.user.id:
+        if message.guild is None and message.author.id != self.bot.user.id:
             member = message.author
             embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
             if message.embeds:
@@ -208,10 +207,10 @@ class Mod(commands.Cog):
             else:
                 return True
         # 683840764677193739 = #wanna-voice-but-cant-talk
-        if len(author.roles) == 1 and isEnglish(message.content) == False and ('https://' in message.content or 'http://' in message.content) and message.channel.id == 683840764677193739:
+        if len(author.roles) == 1 and isEnglish(message.content) is False and ('https://' in message.content or 'http://' in message.content) and message.channel.id == 683840764677193739:
             await author.ban(reason="Non-English characters in message with no author roles", delete_message_days=1)
             await self.bot.modlog_channel.send("Banned user : {} ({}) for non-English characters in message\n Message: ```{}```".format(author, author.id, message.content))
-        
+
         # crypto scammers
         banlist = [
             r".*https://libra-sale.io.*",
@@ -239,12 +238,12 @@ class Mod(commands.Cog):
                 if len(author.roles) == 1:
                     await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
                     await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
-                    
+
         # everyone + embed
         if "@everyone" in message.content.lower() and len(message.embeds) > 0:
             await author.ban(reason="Likely a promotion", delete_message_days=1)
             await self.bot.modlog_channel.send("Banned potential promotion spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
-        
+
         # russian sites
         if re.match(r".*http(.)?:\/\/[^\s]*\.ru.*", message.content.lower()):
             await author.ban(reason="Detected russian site. Preemptively banning incase it is a scam", delete_message_days=1)
@@ -297,7 +296,7 @@ class Mod(commands.Cog):
             prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
             if prev_role:
                 await ctx.channel.set_permissions(prev_role, overwrite=None)
-        
+
         overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
         overwrite.read_messages = None
@@ -309,7 +308,7 @@ class Mod(commands.Cog):
             json.dump(self.locks, f)
         await ctx.message.delete()
         await ctx.send("🔒 Locked channel with a secret phrase. Users can use the unlock command in <#429185857346338827> to access the channel.")
-        
+
     @commands.command(name="unlock")
     @commands.guild_only()
     async def unlock(self, ctx, phrase: str):
@@ -331,7 +330,7 @@ class Mod(commands.Cog):
                 await ctx.send(f"⚠️ You already have access to <#{i}>.")
         if not valid_pass_bool:
             await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
-    
+
     @commands.command(name="dellock")
     @commands.guild_only()
     @commands.has_any_role("Moderators")
@@ -349,9 +348,9 @@ class Mod(commands.Cog):
 
     @commands.command(name="listwarns")
     @commands.guild_only()
-    async def listwarns(self, ctx, user:discord.User = None):
+    async def listwarns(self, ctx, user: discord.User = None):
         """Lists warnings for a user"""
-        if user == None or user == ctx.author:
+        if user is None or user == ctx.author:
             user = ctx.author
         elif user and not any(role for role in ctx.author.roles if role.name in ["aww", "Moderators"]):
             raise commands.errors.CheckFailure()
@@ -372,11 +371,10 @@ class Mod(commands.Cog):
             embed.color = discord.Color.green()
         await ctx.send(embed=embed)
 
-
     @commands.command(name="warn")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
-    async def warn(self, ctx, member:discord.Member, *, reason=""):
+    async def warn(self, ctx, member: discord.Member, *, reason=""):
         """Warn a user. Staff only."""
         issuer = ctx.message.author
         for role in [self.bot.mods_role, self.bot.owner_role, self.bot.aww_role]:
@@ -389,7 +387,7 @@ class Mod(commands.Cog):
             warn_count = len(rsts[str(member.id)]["warns"])
         msg = "You were warned on PKHeX Development server."
         if reason != "":
-            msg += " The given reason was : " + reason 
+            msg += " The given reason was : " + reason
         msg += "\n\nPlease read the rules of the server. This is warn #{}".format(warn_count)
         if warn_count >= 5:
             msg += "\n\nYou were automatically banned due to five or more warnings."
@@ -397,9 +395,9 @@ class Mod(commands.Cog):
                 try:
                     await member.send(msg)
                 except discord.errors.Forbidden:
-                    pass # dont fail incase user has blocked the bot
+                    pass  # dont fail incase user has blocked the bot
                 await member.ban(reason=reason, delete_message_days=0)
-            except:
+            except Exception:
                 await ctx.send("No permission to ban the warned member")
         elif warn_count >= 3:
             msg += "\n\nYou were kicked because of this warning. You can join again right away. Reaching 5 warnings will result in an automatic ban. Permanent invite link: https://discord.gg/tDMvSRv."
@@ -407,16 +405,16 @@ class Mod(commands.Cog):
                 try:
                     await member.send(msg)
                 except discord.errors.Forbidden:
-                    pass # dont fail incase user has blocked the bot
+                    pass  # dont fail incase user has blocked the bot
                 await member.kick(reason="Three or Four Warnings")
-            except:
+            except Exception:
                 await ctx.send("No permission to kick the warned member")
         elif warn_count <= 2:
             msg += " __The next warn will automatically kick.__"
             try:
                 await member.send(msg)
             except discord.errors.Forbidden:
-                pass # dont fail incase user has blocked the bot
+                pass  # dont fail incase user has blocked the bot
         msg = "⚠️ **Warned**: {} warned {} (warn #{}) | {}".format(issuer.name, member.mention, warn_count, str(member))
         if reason != "":
             msg += " The given reason is : " + reason
@@ -425,13 +423,13 @@ class Mod(commands.Cog):
         if ctr_msg:
             await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(msg)
-    
+
     @commands.command(name="delwarn")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
-    async def delwarn(self, ctx, member:discord.Member, idx:int):
+    async def delwarn(self, ctx, member: discord.Member, idx: int):
         """Remove a specific warning from a user. Staff only."""
-        returnvalue = await self.remove_warning(member,idx)
+        returnvalue = await self.remove_warning(member, idx)
         with open("warnings.json", "r") as f:
             rsts = json.load(f)
             warn_count = len(rsts[str(member.id)]["warns"])
@@ -452,7 +450,7 @@ class Mod(commands.Cog):
     @commands.command(name="clearwarns")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
-    async def clearwarns(self, ctx, member:discord.Member):
+    async def clearwarns(self, ctx, member: discord.Member):
         """Clears warns of a specific member"""
         with open("warnings.json", "r") as f:
             warns = json.load(f)
@@ -504,7 +502,7 @@ class Mod(commands.Cog):
                 if ctr_msg:
                     await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
-                
+
     @commands.command()
     @checks.check_permissions_or_owner(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
@@ -789,7 +787,7 @@ class Mod(commands.Cog):
             if ctx.command:
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
             self.logger.exception(error, exc_info=error)
-            
+
     @lock.error
     @unlock.error
     @dellock.error
