@@ -23,22 +23,21 @@ class Rules(commands.Cog):
             embed.description = entry[1]
             messages.append(embed)
         counter = 0
-        predicate = lambda m: m.author == self.bot.user
         msg = await self.bot.rules_channel.fetch_message(730257788894445659)  # Last non-bot message in channel
-        async for message in self.bot.rules_channel.history(limit=100, oldest_first=True, after=msg).filter(predicate):
+        async for message in self.bot.rules_channel.history(limit=100, oldest_first=True, after=msg).filter(lambda m: m.author == self.bot.user):
             if counter < len(messages):
                 if message.embeds and message.embeds[0].title == messages[counter].title \
                     and message.embeds[0].description == messages[counter].description \
-                    and message.embeds[0].footer.text == messages[counter].footer.text:
+                        and message.embeds[0].footer.text == messages[counter].footer.text:
                     counter += 1
                     continue
-                time.sleep(2) # avoid rate limits
+                time.sleep(2)  # avoid rate limits
                 await message.edit(embed=messages[counter])
                 counter += 1
             else:
                 await message.delete()
         for message in messages[counter:]:
-            time.sleep(2) # avoid rate limits
+            time.sleep(2)  # avoid rate limits
             await self.bot.rules_channel.send(embed=message)
 
     @commands.group(invoke_without_command=True)
@@ -50,14 +49,13 @@ class Rules(commands.Cog):
     async def add(self, ctx):
         random_num = random.randint(1, 9999)
         await ctx.send("Type the rule to be added after this message:\n(note: all rules are automatically underlined)\n\nType `abort-{:04d}` to abort.".format(random_num))
-        check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
         try:
-            question = await self.bot.wait_for("message", check=check, timeout=30.0)
+            question = await self.bot.wait_for("message", check=(lambda m: m.channel == ctx.message.channel and m.author == ctx.author), timeout=30.0)
             if question.content == "abort-{:04d}".format(random_num):
                 return await ctx.send("❌ Canceled by user.")
             random_num = random.randint(1, 9999)
             await ctx.send("Type the rule description after this message:\n\nType `abort-{:04d}` to abort.".format(random_num))
-            answer = await self.bot.wait_for("message", check=check, timeout=30.0)
+            answer = await self.bot.wait_for("message", check=(lambda m: m.channel == ctx.message.channel and m.author == ctx.author), timeout=30.0)
             if answer.content == "abort-{:04d}".format(random_num):
                 return await ctx.send("❌ Canceled by user.")
         except asyncio.TimeoutError:
@@ -80,7 +78,7 @@ class Rules(commands.Cog):
         with open("rules.json", "r") as f:
             rules_db = json.load(f)
         try:
-            rules_db.pop(rules_id-1)
+            rules_db.pop(rules_id - 1)
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         with open("rules.json", "w") as f:
@@ -98,7 +96,7 @@ class Rules(commands.Cog):
         with open("rules.json", "r") as f:
             rules_db = json.load(f)
         try:
-            rules_db[rules_id-1]
+            rules_db[rules_id - 1]
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         random_num = random.randint(1, 9999)
@@ -106,10 +104,9 @@ class Rules(commands.Cog):
             "r": "rule",
             "d": "description"
         }
-        check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
         await ctx.send("Enter the new {} content:\n\nType `abort-{:04d}` to abort.".format(edit_type_readable[edit_type[0]], random_num))
         try:
-            new_content = await self.bot.wait_for("message", check=check, timeout=30.0)
+            new_content = await self.bot.wait_for("message", check=(lambda m: m.channel == ctx.message.channel and m.author == ctx.author), timeout=30.0)
             if new_content.content == "abort-{:04d}".format(random_num):
                 return await ctx.send("❌ Canceled by user.")
         except asyncio.TimeoutError:
@@ -132,7 +129,7 @@ class Rules(commands.Cog):
         with open("rules.json", "r") as f:
             rules_db = json.load(f)
         try:
-            entry = rules_db[rules_id-1]
+            entry = rules_db[rules_id - 1]
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         if return_type[0] == "r":

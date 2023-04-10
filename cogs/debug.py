@@ -181,7 +181,7 @@ class Debug(commands.Cog):
                 else:
                     try:
                         result = '```\n{}\n```'.format(repr(eval(body, env)))
-                    except:
+                    except Exception:
                         pass
             else:
                 self._last_result = ret

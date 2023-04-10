@@ -32,21 +32,20 @@ class Faq(commands.Cog):
                 embed.set_footer(text="Aliases: " + ", ".join(aliases))
             messages.append(embed)
         counter = 0
-        predicate = lambda m: m.author == self.bot.user
-        async for message in self.bot.faq_channel.history(limit=100, oldest_first=True).filter(predicate):
+        async for message in self.bot.faq_channel.history(limit=100, oldest_first=True).filter(lambda m: m.author == self.bot.user):
             if counter < len(messages):
                 if message.embeds and message.embeds[0].title == messages[counter].title \
                     and message.embeds[0].description == messages[counter].description \
-                    and message.embeds[0].footer.text == messages[counter].footer.text:
+                        and message.embeds[0].footer.text == messages[counter].footer.text:
                     counter += 1
                     continue
-                time.sleep(2) # avoid rate limits
+                time.sleep(2)  # avoid rate limits
                 await message.edit(embed=messages[counter])
                 counter += 1
             else:
                 await message.delete()
         for message in messages[counter:]:
-            time.sleep(2) # avoid rate limits
+            time.sleep(2)  # avoid rate limits
             await self.bot.faq_channel.send(embed=message)
 
     @commands.group(invoke_without_command=True)
@@ -54,18 +53,17 @@ class Faq(commands.Cog):
         await ctx.send_help(ctx.command)
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def add(self, ctx):
         random_num = random.randint(1, 9999)
         await ctx.send("Type the question to be added after this message:\n(note: all questions are automatically underlined)\n\nType `abort-{:04d}` to abort.".format(random_num))
-        check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
         try:
-            question = await self.bot.wait_for("message", check=check, timeout=30.0)
+            question = await self.bot.wait_for("message", check=(lambda m: m.channel == ctx.message.channel and m.author == ctx.author), timeout=30.0)
             if question.content == "abort-{:04d}".format(random_num):
                 return await ctx.send("❌ Canceled by user.")
             random_num = random.randint(1, 9999)
             await ctx.send("Type the answer after this message:\n\nType `abort-{:04d}` to abort.".format(random_num))
-            answer = await self.bot.wait_for("message", check=check, timeout=30.0)
+            answer = await self.bot.wait_for("message", check=(lambda m: m.channel == ctx.message.channel and m.author == ctx.author), timeout=30.0)
             if answer.content == "abort-{:04d}".format(random_num):
                 return await ctx.send("❌ Canceled by user.")
         except asyncio.TimeoutError:
@@ -81,7 +79,7 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def alias(self, ctx, faq_id: int = 0, *, words: str = ""):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
@@ -93,7 +91,7 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command()
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def delalias(self, ctx, word: str):
         if word not in self.faq_aliases:
             return await ctx.send("⚠ FAQ alias does not exist.")
@@ -116,14 +114,14 @@ class Faq(commands.Cog):
         await ctx.send("Aliases for FAQ entry {}: {}".format(faq_id, ", ".join(aliases)))
 
     @faq.command(aliases=['del'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def delete(self, ctx, faq_id: int = 0):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
         with open("faq.json", "r") as f:
             faq_db = json.load(f)
         try:
-            faq_db.pop(faq_id-1)
+            faq_db.pop(faq_id - 1)
             for word, faq in self.faq_aliases.items():
                 if faq == faq_id:
                     del self.faq_aliases[word]
@@ -139,7 +137,7 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
     @faq.command(aliases=['modify'])
-    @commands.has_any_role("Builders", "GitHub Contributors", "Moderators", "aww")
+    @commands.has_any_role("GitHub Contributors", "Moderators", "aww")
     async def edit(self, ctx, faq_id: int = 0, edit_type: str = "a"):
         if faq_id == 0:
             return await ctx.send("⚠ FAQ entry ID is required.")
@@ -148,7 +146,7 @@ class Faq(commands.Cog):
         with open("faq.json", "r") as f:
             faq_db = json.load(f)
         try:
-            faq_db[faq_id-1]
+            faq_db[faq_id - 1]
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         random_num = random.randint(1, 9999)
@@ -156,10 +154,9 @@ class Faq(commands.Cog):
             "q": "question",
             "a": "answer"
         }
-        check = lambda m: m.channel == ctx.message.channel and m.author == ctx.author
         await ctx.send("Enter the new {} content:\n\nType `abort-{:04d}` to abort.".format(edit_type_readable[edit_type[0]], random_num))
         try:
-            new_content = await self.bot.wait_for("message", check=check, timeout=30.0)
+            new_content = await self.bot.wait_for("message", check=(lambda m: m.channel == ctx.message.channel and m.author == ctx.author), timeout=30.0)
             if new_content.content == "abort-{:04d}".format(random_num):
                 return await ctx.send("❌ Canceled by user.")
         except asyncio.TimeoutError:
@@ -182,7 +179,7 @@ class Faq(commands.Cog):
         with open("faq.json", "r") as f:
             faq_db = json.load(f)
         try:
-            entry = faq_db[faq_id-1]
+            entry = faq_db[faq_id - 1]
         except IndexError:
             return await ctx.send("⚠ No such entry exists.")
         if return_type[0] == "q":
