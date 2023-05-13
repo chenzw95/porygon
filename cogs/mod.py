@@ -209,7 +209,7 @@ class Mod(commands.Cog):
         # 683840764677193739 = #wanna-voice-but-cant-talk
         if len(author.roles) == 1 and isEnglish(message.content) is False and ('https://' in message.content or 'http://' in message.content) and message.channel.id == 683840764677193739:
             await author.ban(reason="Non-English characters in message with no author roles", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned user : {} ({}) for non-English characters in message\n Message: ```{}```".format(author, author.id, message.content))
+            await self.bot.modlog_channel.send("Banned user: {} ({}) for non-English characters in message\n Message: ```{}```".format(author, author.id, message.content))
 
         # crypto scammers
         banlist = [
@@ -220,7 +220,7 @@ class Mod(commands.Cog):
             if re.match(ban, message.content.lower()):
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
-                    await self.bot.modlog_channel.send("Banned user : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+                    await self.bot.modlog_channel.send("Banned user: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # csgo/other game scammers
         games = [
@@ -237,17 +237,17 @@ class Mod(commands.Cog):
             if game in message.content.lower() and any(domain in message.content.lower() for domain in banned_sites):
                 if len(author.roles) == 1:
                     await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
-                    await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+                    await self.bot.modlog_channel.send("Banned potential CSGO scammer: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # everyone + embed
         if "@everyone" in message.content.lower() and len(message.embeds) > 0:
             await author.ban(reason="Likely a promotion", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned potential promotion spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+            await self.bot.modlog_channel.send("Banned potential promotion spammer: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # russian sites
         if re.match(r".*http(.)?:\/\/[^\s]*\.ru.*", message.content.lower()):
             await author.ban(reason="Detected russian site. Preemptively banning incase it is a scam", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned potential russian site spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+            await self.bot.modlog_channel.send("Banned potential russian site spammer: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # invite filtering
         msg_split = message.content.replace("\n", " ").split(" ")
@@ -258,7 +258,7 @@ class Mod(commands.Cog):
             if invite.guild.id not in self.whitelisted_guild_ids and message.channel.id not in (683403876208083026, 683403966607786058):  # ID 683403876208083026 = #list-your-sysbot-server, ID 683403966607786058 = #sysbot-servers
                 await message.author.add_roles(self.bot.mute_role, reason="Posted non-whitelisted invite")
                 await message.delete()
-                return await self.bot.mod_channel.send("Muted user posting a non-whitelisted invite : {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
+                return await self.bot.mod_channel.send("Muted user posting a non-whitelisted invite: {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
 
     @commands.command(name='promote', aliases=['addrole'])
     @commands.guild_only()
@@ -274,10 +274,10 @@ class Mod(commands.Cog):
             embed.add_field(name="Action taken by", value=ctx.author.name)
             await member.add_roles(role)
             embed.title = "Added {} role".format(role.name)
-            await ctx.send("{} : {} role has been added to you!".format(member.mention, role.name))
+            await ctx.send("{}: {} role has been added to you!".format(member.mention, role.name))
             await self.bot.modlog_channel.send(embed=embed)
         else:
-            await ctx.send("{} : {} already has this role!".format(ctx.author.mention, member.name))
+            await ctx.send("{}: {} already has this role!".format(ctx.author.mention, member.name))
 
     @commands.command(name="lock")
     @commands.guild_only()
@@ -381,7 +381,7 @@ class Mod(commands.Cog):
             warn_count = len(rsts[str(member.id)]["warns"])
         msg = "You were warned on PKHeX Development server."
         if reason != "":
-            msg += " The given reason was : " + reason
+            msg += " The given reason was: " + reason
         msg += "\n\nPlease read the rules of the server. This is warn #{}".format(warn_count)
         if warn_count >= 5:
             msg += "\n\nYou were automatically banned due to five or more warnings."
@@ -403,15 +403,16 @@ class Mod(commands.Cog):
                 await member.kick(reason="Three or Four Warnings")
             except Exception:
                 await ctx.send("No permission to kick the warned member")
-        elif warn_count <= 2:
-            msg += " __The next warn will automatically kick.__"
+        else:
+            if warn_count == 2:
+                msg += " __The next warn will automatically kick.__"
             try:
                 await member.send(msg)
             except discord.errors.Forbidden:
                 pass  # dont fail incase user has blocked the bot
         msg = "⚠️ **Warned**: {} warned {} (warn #{}) | {}".format(issuer.name, member.mention, warn_count, str(member))
         if reason != "":
-            msg += " The given reason is : " + reason
+            msg += " The given reason is: " + reason
         await ctx.send(msg)
         ctr_msg = self.countermemes(reason)
         if ctr_msg:
@@ -563,7 +564,6 @@ class Mod(commands.Cog):
         return_msg = "Banned user: {}".format(user.mention)
         return_msg += " for reason `{}`".format(reason)
         embed.add_field(name="Reason", value=reason)
-        return_msg += "."
         await ctx.send(return_msg)
         ctr_msg = self.countermemes(reason)
         if ctr_msg:
