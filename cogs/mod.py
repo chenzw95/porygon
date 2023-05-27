@@ -285,13 +285,13 @@ class Mod(commands.Cog):
     async def lock(self, ctx, role: discord.Role, phrase: str):
         """Locks a channel to a specific role for access, unlock via the phrase and unlock commands"""
         # check if a lock already exists and delete
+        overwrite = ctx.channel.overwrites_for(discord.utils.get(ctx.guild.roles, name="@everyone"))
         if str(ctx.channel.id) in self.locks:
             r_id, _ = self.locks[str(ctx.channel.id)]
             prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
             if prev_role:
                 await ctx.channel.set_permissions(prev_role, overwrite=None)
 
-        overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
         overwrite.read_messages = None
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
@@ -331,7 +331,7 @@ class Mod(commands.Cog):
     async def dellock(self, ctx):
         if str(ctx.channel.id) not in self.locks:
             return await ctx.send("This channel is already unrestricted.")
-        overwrite = discord.PermissionOverwrite()
+        overwrite = ctx.channel.overwrites_for(discord.utils.get(ctx.guild.roles, name="@everyone"))
         overwrite.send_messages = None
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[str(ctx.channel.id)][0]), overwrite=None)
