@@ -744,7 +744,7 @@ class Mod(commands.Cog):
         
     @commands.command()
     @commands.has_any_role("Moderators")
-    async def addnudge(self, ctx, target: str, nudge: str):
+    async def addnudge(self, ctx, target: str, *, nudge: str):
         """Creates a nudge"""
         self.nudges[target.lower()] = nudge
         await ctx.send("Successfully created/updated nudge")
