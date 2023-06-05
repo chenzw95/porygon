@@ -736,7 +736,7 @@ class Mod(commands.Cog):
     async def nudge(self, ctx, target: str):
         """Sends a nudge to the user"""
         if target.lower() not in self.nudges:
-            await ctx.send("This nudge does not exist")
+            return await ctx.send("This nudge does not exist")
         embed = discord.Embed(title="Reminder")
         embed.description = self.nudges[target.lower()]
         await ctx.send(embed=embed)
@@ -749,6 +749,8 @@ class Mod(commands.Cog):
             del self.nudges[target.lower()]
             return await ctx.send("Successfully deleted nudge")
         self.nudges[target.lower()] = nudge
+        with open("nudges.json", "w") as f:
+            json.dump(self.nudges, f)
         await ctx.send("Successfully created/updated nudge")
 
     @commands.command()
