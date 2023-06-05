@@ -739,13 +739,15 @@ class Mod(commands.Cog):
             await ctx.send("This nudge does not exist")
         embed = discord.Embed(title="Reminder")
         embed.description = self.nudges[target.lower()]
-        embed.set_footer(text="Please read through the server rules and help wikis.")
         await ctx.send(embed=embed)
         
     @commands.command()
     @commands.has_any_role("Moderators")
-    async def addnudge(self, ctx, target: str, *, nudge: str):
+    async def addnudge(self, ctx, target: str, *, nudge: str = None):
         """Creates a nudge"""
+        if not nudge and target.lower() in self.nudges:
+            del self.nudges[target.lower()]
+            return await ctx.send("Successfully deleted nudge")
         self.nudges[target.lower()] = nudge
         await ctx.send("Successfully created/updated nudge")
 
