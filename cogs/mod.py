@@ -35,6 +35,11 @@ class Mod(commands.Cog):
                 json.dump([], file, indent=4)
         with open("whitelisted_guild_ids.json", "r") as file:
             self.whitelisted_guild_ids = json.load(file)
+        if not os.path.exists("nudges.json"):
+            with open("nudges.json", "w") as file:
+                json.dump({}, file, indent=4)
+        with open("nudges.json", "r") as file:
+            self.nudges = json.load(file)
 
     def cog_unload(self):
         self.expiry_task.cancel()
@@ -726,6 +731,23 @@ class Mod(commands.Cog):
                     inline=False)
         embed.set_footer(text="Please read through every troubleshooting step on the repo before asking a question.")
         await ctx.send(embed=embed)
+        
+    @commands.command()
+    async def nudge(self, ctx, target: str):
+        """Sends a nudge to the user"""
+        if target.lower() not in self.nudges:
+            await ctx.send("This nudge does not exist")
+        embed = discord.Embed(title="Reminder")
+        embed.description = self.nudges[target.lower()]
+        embed.set_footer(text="Please read through the server rules and help wikis.")
+        await ctx.send(embed=embed)
+        
+    @commands.command()
+    @commands.has_any_role("Moderators")
+    async def addnudge(self, ctx, target: str, nudge: str):
+        """Creates a nudge"""
+        self.nudges[target.lower()] = nudge
+        await ctx.send("Successfully created/updated nudge")
 
     @commands.command()
     @commands.has_any_role("Moderators")
