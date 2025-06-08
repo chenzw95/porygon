@@ -231,10 +231,8 @@ class Mod(commands.Cog):
         games = [
             "csgo",
             "cs:go",
-            "steam",
             "skins",
             "@everyone",
-            "free",
             "nitro"
         ]
         banned_sites = ['https://', 'http://', 'http://www.', 'https://www.']
