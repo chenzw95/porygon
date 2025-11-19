@@ -45,10 +45,9 @@ class Starboard(commands.Cog):
         emoji = self.star_emoji(count)
         content = '{0} **{1}** {2} ID: {3}'.format(emoji, count, message.channel.mention, message.id)
         embed = discord.Embed(description=message.content)
-        if message.embeds:
-            data = message.embeds[0]
-            if data.type == 'image':
-                embed.set_image(url=data.url)
+        if message.attachments:
+            data = message.attachments[0]
+            embed.set_image(url=data.url)
 
         if message.attachments:
             file = message.attachments[0]
