@@ -51,7 +51,7 @@ if __name__ == "__main__":
                        max_messages=1000,
                        intents=intents)
     bot.config = config
-    bot.is_setup = asyncio.Event(loop=bot.loop)
+    bot.is_setup = asyncio.Event()
 
     async def wait_for_setup():
         await bot.is_setup.wait()
@@ -60,9 +60,18 @@ if __name__ == "__main__":
     async def connect_db():
         bot.engine = await create_engine(host=config['database']['host'], user=config['database']['user'],
                                          password=config['database']['password'], db=config['database']['dbname'],
-                                         autocommit=True, loop=bot.loop)
+                                         autocommit=True)
 
-    bot.loop.create_task(connect_db())
+    async def setup_hook():
+        await connect_db()
+        for extension in os.listdir("cogs"):
+            if extension.endswith('.py') and extension != "__init__.py" and "_alt" not in extension:
+                try:
+                    await bot.load_extension("cogs." + extension[:-3])
+                except Exception as e:  # pylint: disable=broad-except
+                    logger.exception('Failed to load extension {}'.format(extension))
+
+    bot.setup_hook = setup_hook
 
     @checks.check_permissions_or_owner(administrator=True)
     @bot.command(hidden=True)
@@ -70,7 +79,7 @@ if __name__ == "__main__":
         logger.info("Restarting on {}'s request...".format(ctx.author.name))
         bot.engine.close()
         await ctx.send("Restarting...")
-        await bot.logout()
+        await bot.close()
         await bot.engine.wait_closed()
         os._exit(1)
 
@@ -80,7 +89,7 @@ if __name__ == "__main__":
         logger.info("Terminating on {}'s request...".format(ctx.author.name))
         bot.engine.close()
         await ctx.send("Shutting down...")
-        await bot.logout()
+        await bot.close()
         await bot.engine.wait_closed()
         os._exit(0)
 
@@ -113,13 +122,6 @@ if __name__ == "__main__":
         bot.session = aiohttp.ClientSession(loop=bot.loop, headers={"User-Agent": "Porygon"})
         logger.info("Connected as UID {}.".format(bot.user.id))
         bot.is_setup.set()
-
-    for extension in os.listdir("cogs"):
-        if extension.endswith('.py') and extension != "__init__.py" and "_alt" not in extension:
-            try:
-                bot.load_extension("cogs." + extension[:-3])
-            except Exception as e:  # pylint: disable=broad-except
-                logger.exception('Failed to load extension {}'.format(extension))
 
     try:
         bot.run(config['token'])
