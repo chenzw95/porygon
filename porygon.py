@@ -45,7 +45,6 @@ if __name__ == "__main__":
         logger.critical("Config file not found, quitting!")
         sys.exit(-1)
     intents = discord.Intents.default()
-    intents.members = True
     bot = commands.Bot(command_prefix=config['prefix'],
                        description='Porygon',
                        max_messages=1000,
