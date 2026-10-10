@@ -189,7 +189,7 @@ class Mod(commands.Cog):
                     embed.set_image(url=file.url)
                 else:
                     embed.add_field(name='Attachment', value='[{0}]({1})'.format(file.filename, file.url), inline=False)
-            embed.set_author(name="Message from {}".format(member), icon_url=member.avatar_url)
+            embed.set_author(name="Message from {}".format(member), icon_url=member.display_avatar.url)
             embed.description = message.clean_content
             embed.set_footer(text="ID: {}".format(member.id))
             await self.bot.mod_channel.send(embed=embed)
@@ -353,7 +353,7 @@ class Mod(commands.Cog):
             raise commands.errors.CheckFailure()
             return
         embed = discord.Embed(color=discord.Color.dark_red())
-        embed.set_author(name="Warns for {}".format(user), icon_url=user.avatar_url)
+        embed.set_author(name="Warns for {}".format(user), icon_url=user.display_avatar.url)
         with open("warnings.json", "r") as f:
             warns = json.load(f)
         try:
