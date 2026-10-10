@@ -45,7 +45,7 @@ if __name__ == "__main__":
         logger.critical("Config file not found, quitting!")
         sys.exit(-1)
     intents = discord.Intents.default()
-    bot = commands.Bot(command_prefix=config['prefix'],
+    bot = commands.Bot(command_prefix=commands.when_mentioned_or(config['prefix']),
                        description='Porygon',
                        max_messages=1000,
                        intents=intents)
@@ -69,6 +69,9 @@ if __name__ == "__main__":
                     await bot.load_extension("cogs." + extension[:-3])
                 except Exception as e:  # pylint: disable=broad-except
                     logger.exception('Failed to load extension {}'.format(extension))
+        guild = discord.Object(id=config['main_guild'])
+        bot.tree.copy_global_to(guild=guild)
+        await bot.tree.sync(guild=guild)
 
     bot.setup_hook = setup_hook
 
@@ -113,7 +116,7 @@ if __name__ == "__main__":
 
     @bot.event
     async def on_ready():
-        bot.main_server = discord.utils.get(bot.guilds, id=401014193211441153)
+        bot.main_server = discord.utils.get(bot.guilds, id=config['main_guild'])
         for channel, cid in config['channels'].items():
             setattr(bot, "{}_channel".format(channel), bot.main_server.get_channel(cid))
         for role, roleid in config['roles'].items():
