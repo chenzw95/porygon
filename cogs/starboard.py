@@ -151,7 +151,7 @@ class Starboard(commands.Cog):
                 return r.count
         return 0
 
-    @commands.command(name='starboardcount', aliases=['starcount'])
+    @commands.hybrid_command(name='starboardcount', aliases=['starcount'])
     @commands.has_any_role("aww", "Moderators")
     async def starboardcount(self, ctx, stars: int):
         """Modifies the amount of stars needed to add to starboard"""
@@ -162,7 +162,7 @@ class Starboard(commands.Cog):
             json.dump(self.bot.config, conf, indent=4)
         await ctx.send("Messages now require {0} star(s) to show up in the starboard.".format(stars))
 
-    @commands.command(name='deletestar', aliases=['delstar'])
+    @commands.hybrid_command(name='deletestar', aliases=['delstar'])
     @commands.has_any_role("aww", "Moderators")
     async def deletestar(self, ctx, message_id, clear_stars: typing.Optional[bool] = True):
         async with self.bot.engine.acquire() as conn:
