@@ -78,7 +78,7 @@ class Mod(commands.Cog):
                         member = self.bot.main_server.get_member(row.user)
                         if member is not None:
                             await member.remove_roles(getattr(self.bot, "{}_role".format(row.type), None))
-                        embed = discord.Embed(color=discord.Color.dark_orange(), timestamp=now_datetime)
+                        embed = discord.Embed(color=discord.Color.dark_orange(), timestamp=discord.utils.utcnow())
                         embed.title = "🕛 Restriction expired"
                         if member is not None:
                             embed.add_field(name="Member", value=member.mention)
@@ -154,7 +154,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        embed = discord.Embed(color=discord.Color.red(), timestamp=datetime.utcnow())
+        embed = discord.Embed(color=discord.Color.red(), timestamp=discord.utils.utcnow())
         embed.title = "🚪 Member left"
         embed.add_field(name="User", value="{} ({})".format(member, member.id))
         embed.add_field(name="Mention", value=member.mention, inline=False)
@@ -162,7 +162,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        embed = discord.Embed(color=discord.Color.blue(), timestamp=datetime.utcnow())
+        embed = discord.Embed(color=discord.Color.blue(), timestamp=discord.utils.utcnow())
         member = message.author
         embed.title = "🗑️ Message deleted"
         embed.add_field(name="Author", value="{} ({})".format(member, member.id))
@@ -178,7 +178,7 @@ class Mod(commands.Cog):
     async def on_message(self, message):
         if message.guild is None and message.author.id != self.bot.user.id:
             member = message.author
-            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
+            embed = discord.Embed(color=discord.Color.gold(), timestamp=discord.utils.utcnow())
             if message.embeds:
                 data = message.embeds[0]
                 if data.type == 'image':
