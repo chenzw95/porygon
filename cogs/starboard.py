@@ -57,7 +57,7 @@ class Starboard(commands.Cog):
                 embed.add_field(name='Attachment', value='[{0}]({1})'.format(file.filename, file.url), inline=False)
 
         embed.add_field(name='Context', value='[Jump!]({0})'.format(message.jump_url), inline=False)
-        embed.set_author(name=message.author.display_name, icon_url=message.author.avatar_url_as(format='png'))
+        embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.with_format('png').url)
         embed.timestamp = message.created_at
         embed.colour = self.star_gradient_colour(count)
         return content, embed
@@ -69,9 +69,11 @@ class Starboard(commands.Cog):
             try:
                 o = discord.Object(id=message_id + 1)
                 # don't wanna use get_message due to poor rate limit (1/1s) vs (50/1s)
-                msg = await channel.history(limit=1, before=o).next()
+                msg = None
+                async for m in channel.history(limit=1, before=o):
+                    msg = m
 
-                if msg.id != message_id:
+                if msg is None or msg.id != message_id:
                     return None
 
                 self._message_cache[message_id] = msg
