@@ -10,12 +10,42 @@ from datetime import datetime, timedelta
 
 import discord
 from database import restrictions_tbl
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import BucketType
 from sqlalchemy import null
 from sqlalchemy.dialects.mysql import insert
 
 from .utils import checks
+
+
+class LockModal(discord.ui.Modal, title="Lock channel"):
+    phrase = discord.ui.TextInput(label="Secret phrase", max_length=100)
+
+    def __init__(self, cog, role):
+        super().__init__()
+        self.cog = cog
+        self.role = role
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await self.cog.apply_lock(interaction, self.role, self.phrase.value)
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        await self.cog.send_lock_error(interaction, error)
+
+
+class UnlockModal(discord.ui.Modal, title="Unlock channel"):
+    phrase = discord.ui.TextInput(label="Unlock phrase", max_length=100)
+
+    def __init__(self, cog):
+        super().__init__()
+        self.cog = cog
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await self.cog.apply_unlock(interaction, self.phrase.value)
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        await self.cog.send_lock_error(interaction, error)
 
 
 class Mod(commands.Cog):
@@ -282,29 +312,47 @@ class Mod(commands.Cog):
         else:
             await ctx.send("{}: {} already has this role!".format(ctx.author.mention, member.name))
 
-    @commands.command(name="lock")
-    @commands.guild_only()
-    @commands.has_any_role("Moderators")
-    async def lock(self, ctx, role: discord.Role, phrase: str):
-        """Locks a channel to a specific role for access, unlock via the phrase and unlock commands"""
+    @app_commands.command(name="lock", description="Lock this channel to a role, unlockable via a secret phrase")
+    @app_commands.guild_only()
+    @app_commands.checks.has_any_role("Moderators")
+    async def lock(self, interaction: discord.Interaction, role: discord.Role):
+        await interaction.response.send_modal(LockModal(self, role))
+
+    async def apply_lock(self, interaction: discord.Interaction, role: discord.Role, phrase: str):
+        channel = interaction.channel
+        everyone = discord.utils.get(interaction.guild.roles, name="@everyone")
         # check if a lock already exists and delete
-        overwrite = ctx.channel.overwrites_for(discord.utils.get(ctx.guild.roles, name="@everyone"))
-        if str(ctx.channel.id) in self.locks:
-            r_id, _ = self.locks[str(ctx.channel.id)]
-            prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
+        overwrite = channel.overwrites_for(everyone)
+        if str(channel.id) in self.locks:
+            r_id, _ = self.locks[str(channel.id)]
+            prev_role = discord.utils.get(interaction.guild.roles, id=r_id)
             if prev_role:
-                await ctx.channel.set_permissions(prev_role, overwrite=None)
+                await channel.set_permissions(prev_role, overwrite=None)
 
         overwrite.send_messages = False
         overwrite.read_messages = None
-        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
+        await channel.set_permissions(everyone, overwrite=overwrite)
         overwrite.send_messages = True
-        await ctx.channel.set_permissions(role, overwrite=overwrite)
-        self.locks[str(ctx.channel.id)] = [role.id, phrase]
+        await channel.set_permissions(role, overwrite=overwrite)
+        self.locks[str(channel.id)] = [role.id, phrase]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
-        await ctx.message.delete()
-        await ctx.send("🔒 Locked channel with a secret phrase. Users can use the unlock command in <#429185857346338827> to access the channel.")
+        await interaction.response.send_message("🔒 Locked channel with a secret phrase. Users can use the unlock command in <#429185857346338827> to access the channel.")
+
+    @lock.error
+    async def lock_app_error_handler(self, interaction: discord.Interaction, error):
+        await self.send_lock_error(interaction, error)
+
+    async def send_lock_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, app_commands.CheckFailure):
+            msg = "You don't have permission to use this command."
+        else:
+            self.logger.exception(error, exc_info=error)
+            msg = f"An error occured while locking: {error}"
+        if interaction.response.is_done():
+            await interaction.followup.send(msg, ephemeral=True)
+        else:
+            await interaction.response.send_message(msg, ephemeral=True)
 
     @commands.command(name="unlock")
     @commands.guild_only()
@@ -804,7 +852,6 @@ class Mod(commands.Cog):
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
             self.logger.exception(error, exc_info=error)
 
-    @lock.error
     @unlock.error
     @dellock.error
     async def lock_error_handler(self, ctx, error):
