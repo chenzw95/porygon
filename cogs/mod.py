@@ -354,27 +354,39 @@ class Mod(commands.Cog):
         else:
             await interaction.response.send_message(msg, ephemeral=True)
 
-    @commands.command(name="unlock")
-    @commands.guild_only()
-    async def unlock(self, ctx, phrase: str):
-        """Unlocks a channel based on the phrase used"""
-        await ctx.message.delete()
-        valid_pass_bool = False
-        if ctx.channel.id != 429185857346338827:
-            await ctx.send("This command can only be used in <#429185857346338827>")
+    @app_commands.command(name="unlock", description="Unlock a channel using its secret phrase")
+    @app_commands.guild_only()
+    async def unlock(self, interaction: discord.Interaction):
+        if interaction.channel_id != 429185857346338827:
+            await interaction.response.send_message("This command can only be used in <#429185857346338827>", ephemeral=True)
             return
+        await interaction.response.send_modal(UnlockModal(self))
+
+    async def apply_unlock(self, interaction: discord.Interaction, phrase: str):
+        async def reply(content, ephemeral=False):
+            # several locks can share a phrase, but an interaction only gets one initial response
+            if interaction.response.is_done():
+                await interaction.followup.send(content, ephemeral=ephemeral)
+            else:
+                await interaction.response.send_message(content, ephemeral=ephemeral)
+
+        valid_pass_bool = False
         for i, v in self.locks.items():
             r, p = v
-            r = discord.utils.get(ctx.guild.roles, id=r)
-            if phrase == p and r not in ctx.author.roles:
+            r = discord.utils.get(interaction.guild.roles, id=r)
+            if phrase == p and r not in interaction.user.roles:
                 valid_pass_bool = True
-                await ctx.author.add_roles(r)
-                await ctx.send(f"✅ {ctx.author.mention} Unlocked channel <#{i}>.")
+                await interaction.user.add_roles(r)
+                await reply(f"✅ {interaction.user.mention} Unlocked channel <#{i}>.")
             elif phrase == p:
                 valid_pass_bool = True
-                await ctx.send(f"⚠️ You already have access to <#{i}>.")
+                await reply(f"⚠️ You already have access to <#{i}>.", ephemeral=True)
         if not valid_pass_bool:
-            await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
+            await reply(f"❌ {interaction.user.mention} that is not a valid unlock phrase.", ephemeral=False)
+
+    @unlock.error
+    async def unlock_app_error_handler(self, interaction: discord.Interaction, error):
+        await self.send_lock_error(interaction, error)
 
     @commands.hybrid_command(name="dellock")
     @commands.guild_only()
@@ -852,7 +864,6 @@ class Mod(commands.Cog):
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
             self.logger.exception(error, exc_info=error)
 
-    @unlock.error
     @dellock.error
     async def lock_error_handler(self, ctx, error):
         await ctx.send(f"An error occured while locking: {error}")
