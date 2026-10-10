@@ -576,10 +576,8 @@ class Mod(commands.Cog):
     @commands.hybrid_command()
     @checks.check_permissions_or_owner(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    async def hackban(self, ctx, user_id: int, *, reason: str = "No reason given."):
-        user = await self.bot.fetch_user(user_id)
-        if user:
-            await self.ban(ctx, user, reason=reason)
+    async def hackban(self, ctx, user: discord.User, *, reason: str = "No reason given."):
+        await self.ban(ctx, user, reason=reason)
 
     @commands.hybrid_command()
     @checks.check_permissions_or_owner(manage_roles=True)
