@@ -126,7 +126,7 @@ class Starboard(commands.Cog):
             return
         star_lock = self._star_queue.get(reaction.message.id)
         if star_lock is None:
-            star_lock = asyncio.Lock(loop=self.bot.loop)
+            star_lock = asyncio.Lock()
             self._star_queue[reaction.message.id] = star_lock
         async with star_lock:
             await self.update_db(reaction.message, 1)
@@ -139,7 +139,7 @@ class Starboard(commands.Cog):
             return
         star_lock = self._star_queue.get(reaction.message.id)
         if star_lock is None:
-            star_lock = asyncio.Lock(loop=self.bot.loop)
+            star_lock = asyncio.Lock()
             self._star_queue[reaction.message.id] = star_lock
         async with star_lock:
             await self.update_db(reaction.message, -1)
