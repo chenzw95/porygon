@@ -71,7 +71,10 @@ if __name__ == "__main__":
                     logger.exception('Failed to load extension {}'.format(extension))
         guild = discord.Object(id=config['main_guild'])
         bot.tree.copy_global_to(guild=guild)
-        await bot.tree.sync(guild=guild)
+        try:
+            await bot.tree.sync(guild=guild)
+        except discord.HTTPException:
+            logger.exception('Failed to sync slash commands')
 
     bot.setup_hook = setup_hook
 
