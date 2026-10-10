@@ -24,7 +24,9 @@ class Rules(commands.Cog):
             messages.append(embed)
         counter = 0
         msg = await self.bot.rules_channel.fetch_message(730257788894445659)  # Last non-bot message in channel
-        async for message in self.bot.rules_channel.history(limit=100, oldest_first=True, after=msg).filter(lambda m: m.author == self.bot.user):
+        async for message in self.bot.rules_channel.history(limit=100, oldest_first=True, after=msg):
+            if message.author != self.bot.user:
+                continue
             if counter < len(messages):
                 if message.embeds and message.embeds[0].title == messages[counter].title \
                     and message.embeds[0].description == messages[counter].description \
