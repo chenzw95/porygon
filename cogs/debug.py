@@ -26,7 +26,6 @@ import psutil
 import shutil
 import glob
 import math
-import pkg_resources
 import sys
 import inspect
 
