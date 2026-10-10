@@ -59,8 +59,8 @@ class Debug(commands.Cog):
         if module[0:5] != "cogs.":
             module = "cogs." + module
         try:
-            self.bot.unload_extension(module)
-            self.bot.load_extension(module)
+            await self.bot.unload_extension(module)
+            await self.bot.load_extension(module)
             await ctx.send("✅ Extension reloaded.")
         except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
@@ -72,7 +72,7 @@ class Debug(commands.Cog):
         if module[0:5] != "cogs.":
             module = "cogs." + module
         try:
-            self.bot.load_extension(module)
+            await self.bot.load_extension(module)
             await ctx.send("✅ Extension loaded.")
         except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
@@ -86,7 +86,7 @@ class Debug(commands.Cog):
         if module == "cogs.debug":
             return await ctx.send("⛔ You may not unload this!")
         try:
-            self.bot.unload_extension(module)
+            await self.bot.unload_extension(module)
             await ctx.send("✅ Extension unloaded.")
         except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
@@ -192,7 +192,7 @@ class Debug(commands.Cog):
                 else:
                     await ctx.send(result)
 
-    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.group(invoke_without_command=True)
     @checks.check_permissions_or_owner(administrator=True)
     async def py(self, ctx, *, msg):  # pylint: disable=invalid-name
         """Python interpreter. See the wiki for more info."""
