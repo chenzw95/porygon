@@ -263,7 +263,7 @@ class Mod(commands.Cog):
                 await message.delete()
                 return await self.bot.mod_channel.send("Muted user posting a non-whitelisted invite: {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
 
-    @commands.command(name='promote', aliases=['addrole'])
+    @commands.hybrid_command(name='promote', aliases=['addrole'])
     @commands.guild_only()
     @commands.has_any_role("Moderators")
     async def promote(self, ctx, member: discord.Member):
@@ -328,7 +328,7 @@ class Mod(commands.Cog):
         if not valid_pass_bool:
             await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
 
-    @commands.command(name="dellock")
+    @commands.hybrid_command(name="dellock")
     @commands.guild_only()
     @commands.has_any_role("Moderators")
     async def dellock(self, ctx):
@@ -343,7 +343,7 @@ class Mod(commands.Cog):
             json.dump(self.locks, f)
         await ctx.send("This channel is no longer role locked.")
 
-    @commands.command(name="listwarns")
+    @commands.hybrid_command(name="listwarns")
     @commands.guild_only()
     async def listwarns(self, ctx, user: discord.User = None):
         """Lists warnings for a user"""
@@ -368,7 +368,7 @@ class Mod(commands.Cog):
             embed.color = discord.Color.green()
         await ctx.send(embed=embed)
 
-    @commands.command(name="warn")
+    @commands.hybrid_command(name="warn")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def warn(self, ctx, member: discord.Member, *, reason=""):
@@ -422,7 +422,7 @@ class Mod(commands.Cog):
             await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(msg)
 
-    @commands.command(name="delwarn")
+    @commands.hybrid_command(name="delwarn")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def delwarn(self, ctx, member: discord.Member, idx: int):
@@ -445,7 +445,7 @@ class Mod(commands.Cog):
             await ctx.send(msg)
             await self.bot.modlog_channel.send(msg, embed=returnvalue)
 
-    @commands.command(name="clearwarns")
+    @commands.hybrid_command(name="clearwarns")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def clearwarns(self, ctx, member: discord.Member):
@@ -467,7 +467,7 @@ class Mod(commands.Cog):
         await ctx.send(msg)
         await self.bot.modlog_channel.send(msg)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     async def kick(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
@@ -501,7 +501,7 @@ class Mod(commands.Cog):
                     await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     async def kickwarn(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
@@ -548,7 +548,7 @@ class Mod(commands.Cog):
                     await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def ban(self, ctx, user: discord.User, *, reason: str = "No reason given."):
@@ -573,7 +573,7 @@ class Mod(commands.Cog):
             await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def hackban(self, ctx, user_id: int, *, reason: str = "No reason given."):
@@ -581,7 +581,7 @@ class Mod(commands.Cog):
         if user:
             await self.ban(ctx, user, reason=reason)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def mute(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
@@ -599,7 +599,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command(aliases=['tmute', 'timemute'])
+    @commands.hybrid_command(aliases=['tmute', 'timemute'])
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def timedmute(self, ctx, member: discord.Member, duration, *, reason: str = "No reason given."):
@@ -637,7 +637,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx, member: discord.Member):
@@ -651,7 +651,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Action taken by", value=ctx.author.name)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command(name="wlguild")
+    @commands.hybrid_command(name="wlguild")
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def whitelist_guild(self, ctx, guild_invite: str, reason: str = "No reason was given."):
@@ -673,7 +673,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command(name="dewlguild")
+    @commands.hybrid_command(name="dewlguild")
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def dewhitelist_guild(self, ctx, guild_invite: str):
@@ -694,7 +694,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Action taken by", value=ctx.author.name)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.cooldown(rate=3, per=15.0, type=BucketType.user)
     async def report(self, ctx):
         await ctx.send("This incident has been reported to the proper authorities. Thank you for your time.")
@@ -704,7 +704,7 @@ class Mod(commands.Cog):
         "pksysbot": "You can find:\n- Sysbot.NET's wiki [here](https://github.com/kwsch/SysBot.NET/wiki).\n- General troubleshooting steps [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting).\n- Troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors).\n- Troubleshooting steps for usb-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting)."
     }
 
-    @commands.command()
+    @commands.hybrid_command()
     async def wiki(self, ctx, target: str = None):
         """Sends a link to the target wiki. Automatic choice in help channels. Targets: alm | livehex, pksysbot"""
         if not target or target not in ("alm", "livehex", "pksysbot"):
@@ -730,7 +730,7 @@ class Mod(commands.Cog):
         embed.set_footer(text="Please read through every troubleshooting step on the repo before asking a question.")
         await ctx.send(embed=embed)
         
-    @commands.command()
+    @commands.hybrid_command()
     async def nudge(self, ctx, target: str):
         """Sends a nudge to the user"""
         if target.lower() not in self.nudges:
@@ -739,7 +739,7 @@ class Mod(commands.Cog):
         embed.description = self.nudges[target.lower()]
         await ctx.send(embed=embed)
         
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_any_role("Moderators")
     async def addnudge(self, ctx, target: str, *, nudge: str = None):
         """Creates a nudge"""
@@ -758,7 +758,7 @@ class Mod(commands.Cog):
         out = subprocess.Popen('git pull', stdout=subprocess.PIPE, shell=True)
         await ctx.send(out.communicate()[0].decode("utf-8"))
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def newcounter(self, ctx, name):
@@ -770,7 +770,7 @@ class Mod(commands.Cog):
             json.dump(self.counters, f)
         await ctx.send(f"Created/Reset counter `{name}`.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def listcounters(self, ctx):
