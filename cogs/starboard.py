@@ -198,5 +198,5 @@ class Starboard(commands.Cog):
                 return await ctx.send("❌ Message not found in starboard.")
 
 
-def setup(bot):
-    bot.add_cog(Starboard(bot))
+async def setup(bot):
+    await bot.add_cog(Starboard(bot))

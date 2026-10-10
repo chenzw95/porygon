@@ -214,5 +214,5 @@ class Debug(commands.Cog):
             await self.interpreter(env, msg, ctx)
 
 
-def setup(bot):
-    bot.add_cog(Debug(bot))
+async def setup(bot):
+    await bot.add_cog(Debug(bot))

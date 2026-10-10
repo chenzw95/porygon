@@ -223,5 +223,5 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
 
-def setup(bot):
-    bot.add_cog(Faq(bot))
+async def setup(bot):
+    await bot.add_cog(Faq(bot))

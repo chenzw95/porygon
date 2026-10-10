@@ -161,5 +161,5 @@ class Rules(commands.Cog):
         self.bot.loop.create_task(self.update_rules())
 
 
-def setup(bot):
-    bot.add_cog(Rules(bot))
+async def setup(bot):
+    await bot.add_cog(Rules(bot))

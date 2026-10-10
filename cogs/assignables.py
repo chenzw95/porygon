@@ -69,5 +69,5 @@ class Assignables(commands.Cog):
             await ctx.send("{}: Removed the weeb role! You will no longer be able to access the weeb-spoilers channel!".format(ctx.author.mention))
 
 
-def setup(bot):
-    bot.add_cog(Assignables(bot))
+async def setup(bot):
+    await bot.add_cog(Assignables(bot))

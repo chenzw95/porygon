@@ -813,5 +813,5 @@ class Mod(commands.Cog):
         await ctx.send(f"An error occured while locking: {error}")
 
 
-def setup(bot):
-    bot.add_cog(Mod(bot))
+async def setup(bot):
+    await bot.add_cog(Mod(bot))
