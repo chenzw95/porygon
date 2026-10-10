@@ -92,7 +92,7 @@ class Debug(commands.Cog):
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
             self.logger.exception(e)
 
-    @commands.command(aliases=['ri'])
+    @commands.hybrid_command(aliases=['ri'])
     @commands.guild_only()
     async def roleinfo(self, ctx, *, role: discord.Role):
         embed = discord.Embed(title="Role information", color=role.color, timestamp=ctx.message.created_at)
@@ -100,7 +100,7 @@ class Debug(commands.Cog):
         embed.add_field(name="Hoisted", value=role.hoist, inline=False).add_field(name="Mentionable", value=role.mentionable)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['ui'])
+    @commands.hybrid_command(aliases=['ui'])
     @commands.guild_only()
     async def userinfo(self, ctx, *, raw_member=None):
         if not raw_member:
