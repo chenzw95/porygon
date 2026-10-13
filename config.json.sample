@@ -1,6 +1,7 @@
 {
     "token": "discord token",
     "prefix": "!",
+    "main_guild": 0,
     "poll_time": 120,
     "channels": {
         "channel_name": 0

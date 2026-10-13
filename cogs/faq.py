@@ -32,7 +32,9 @@ class Faq(commands.Cog):
                 embed.set_footer(text="Aliases: " + ", ".join(aliases))
             messages.append(embed)
         counter = 0
-        async for message in self.bot.faq_channel.history(limit=100, oldest_first=True).filter(lambda m: m.author == self.bot.user):
+        async for message in self.bot.faq_channel.history(limit=100, oldest_first=True):
+            if message.author != self.bot.user:
+                continue
             if counter < len(messages):
                 if message.embeds and message.embeds[0].title == messages[counter].title \
                     and message.embeds[0].description == messages[counter].description \
@@ -223,5 +225,5 @@ class Faq(commands.Cog):
         self.bot.loop.create_task(self.update_faq())
 
 
-def setup(bot):
-    bot.add_cog(Faq(bot))
+async def setup(bot):
+    await bot.add_cog(Faq(bot))

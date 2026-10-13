@@ -26,7 +26,6 @@ import psutil
 import shutil
 import glob
 import math
-import pkg_resources
 import sys
 import inspect
 
@@ -60,8 +59,8 @@ class Debug(commands.Cog):
         if module[0:5] != "cogs.":
             module = "cogs." + module
         try:
-            self.bot.unload_extension(module)
-            self.bot.load_extension(module)
+            await self.bot.unload_extension(module)
+            await self.bot.load_extension(module)
             await ctx.send("✅ Extension reloaded.")
         except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
@@ -73,7 +72,7 @@ class Debug(commands.Cog):
         if module[0:5] != "cogs.":
             module = "cogs." + module
         try:
-            self.bot.load_extension(module)
+            await self.bot.load_extension(module)
             await ctx.send("✅ Extension loaded.")
         except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
@@ -87,13 +86,13 @@ class Debug(commands.Cog):
         if module == "cogs.debug":
             return await ctx.send("⛔ You may not unload this!")
         try:
-            self.bot.unload_extension(module)
+            await self.bot.unload_extension(module)
             await ctx.send("✅ Extension unloaded.")
         except Exception as e:  # pylint: disable=broad-except
             await ctx.send("⚠ Operation failed!\n```\n{}: {}```".format(type(e).__name__, e))
             self.logger.exception(e)
 
-    @commands.command(aliases=['ri'])
+    @commands.hybrid_command(aliases=['ri'])
     @commands.guild_only()
     async def roleinfo(self, ctx, *, role: discord.Role):
         embed = discord.Embed(title="Role information", color=role.color, timestamp=ctx.message.created_at)
@@ -101,7 +100,7 @@ class Debug(commands.Cog):
         embed.add_field(name="Hoisted", value=role.hoist, inline=False).add_field(name="Mentionable", value=role.mentionable)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['ui'])
+    @commands.hybrid_command(aliases=['ui'])
     @commands.guild_only()
     async def userinfo(self, ctx, *, raw_member=None):
         if not raw_member:
@@ -193,7 +192,7 @@ class Debug(commands.Cog):
                 else:
                     await ctx.send(result)
 
-    @commands.group(pass_context=True, invoke_without_command=True)
+    @commands.group(invoke_without_command=True)
     @checks.check_permissions_or_owner(administrator=True)
     async def py(self, ctx, *, msg):  # pylint: disable=invalid-name
         """Python interpreter. See the wiki for more info."""
@@ -215,5 +214,5 @@ class Debug(commands.Cog):
             await self.interpreter(env, msg, ctx)
 
 
-def setup(bot):
-    bot.add_cog(Debug(bot))
+async def setup(bot):
+    await bot.add_cog(Debug(bot))

@@ -1,7 +1,7 @@
-discord.py>=1.5.0,<1.6.0
-requests>=2.20.0
-prettytable>=0.7.2,<0.8
-beautifulsoup4>=4.6.0,<4.7.0
-psutil>=5.6.6
-aiomysql
-sqlalchemy>=1.3.0
+discord.py>=2.7.1,<2.8
+requests>=2.25.0,<2.26
+prettytable>=3.18.0,<3.19
+beautifulsoup4>=4.7.0,<4.8
+psutil>=5.8.0,<5.9
+aiomysql>=0.1.0,<0.2
+sqlalchemy>=1.4.0,<1.5

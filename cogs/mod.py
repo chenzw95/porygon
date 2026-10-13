@@ -10,12 +10,42 @@ from datetime import datetime, timedelta
 
 import discord
 from database import restrictions_tbl
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import BucketType
 from sqlalchemy import null
 from sqlalchemy.dialects.mysql import insert
 
 from .utils import checks
+
+
+class LockModal(discord.ui.Modal, title="Lock channel"):
+    phrase = discord.ui.TextInput(label="Secret phrase", max_length=100)
+
+    def __init__(self, cog, role):
+        super().__init__()
+        self.cog = cog
+        self.role = role
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await self.cog.apply_lock(interaction, self.role, self.phrase.value)
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        await self.cog.send_lock_error(interaction, error)
+
+
+class UnlockModal(discord.ui.Modal, title="Unlock channel"):
+    phrase = discord.ui.TextInput(label="Unlock phrase", max_length=100)
+
+    def __init__(self, cog):
+        super().__init__()
+        self.cog = cog
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await self.cog.apply_unlock(interaction, self.phrase.value)
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        await self.cog.send_lock_error(interaction, error)
 
 
 class Mod(commands.Cog):
@@ -35,6 +65,11 @@ class Mod(commands.Cog):
                 json.dump([], file, indent=4)
         with open("whitelisted_guild_ids.json", "r") as file:
             self.whitelisted_guild_ids = json.load(file)
+        if not os.path.exists("nudges.json"):
+            with open("nudges.json", "w") as file:
+                json.dump({}, file, indent=4)
+        with open("nudges.json", "r") as file:
+            self.nudges = json.load(file)
 
     def cog_unload(self):
         self.expiry_task.cancel()
@@ -73,7 +108,7 @@ class Mod(commands.Cog):
                         member = self.bot.main_server.get_member(row.user)
                         if member is not None:
                             await member.remove_roles(getattr(self.bot, "{}_role".format(row.type), None))
-                        embed = discord.Embed(color=discord.Color.dark_orange(), timestamp=now_datetime)
+                        embed = discord.Embed(color=discord.Color.dark_orange(), timestamp=discord.utils.utcnow())
                         embed.title = "🕛 Restriction expired"
                         if member is not None:
                             embed.add_field(name="Member", value=member.mention)
@@ -149,7 +184,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        embed = discord.Embed(color=discord.Color.red(), timestamp=datetime.utcnow())
+        embed = discord.Embed(color=discord.Color.red(), timestamp=discord.utils.utcnow())
         embed.title = "🚪 Member left"
         embed.add_field(name="User", value="{} ({})".format(member, member.id))
         embed.add_field(name="Mention", value=member.mention, inline=False)
@@ -157,7 +192,7 @@ class Mod(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        embed = discord.Embed(color=discord.Color.blue(), timestamp=datetime.utcnow())
+        embed = discord.Embed(color=discord.Color.blue(), timestamp=discord.utils.utcnow())
         member = message.author
         embed.title = "🗑️ Message deleted"
         embed.add_field(name="Author", value="{} ({})".format(member, member.id))
@@ -173,7 +208,7 @@ class Mod(commands.Cog):
     async def on_message(self, message):
         if message.guild is None and message.author.id != self.bot.user.id:
             member = message.author
-            embed = discord.Embed(color=discord.Color.gold(), timestamp=datetime.utcnow())
+            embed = discord.Embed(color=discord.Color.gold(), timestamp=discord.utils.utcnow())
             if message.embeds:
                 data = message.embeds[0]
                 if data.type == 'image':
@@ -184,7 +219,7 @@ class Mod(commands.Cog):
                     embed.set_image(url=file.url)
                 else:
                     embed.add_field(name='Attachment', value='[{0}]({1})'.format(file.filename, file.url), inline=False)
-            embed.set_author(name="Message from {}".format(member), icon_url=member.avatar_url)
+            embed.set_author(name="Message from {}".format(member), icon_url=member.display_avatar.url)
             embed.description = message.clean_content
             embed.set_footer(text="ID: {}".format(member.id))
             await self.bot.mod_channel.send(embed=embed)
@@ -209,7 +244,7 @@ class Mod(commands.Cog):
         # 683840764677193739 = #wanna-voice-but-cant-talk
         if len(author.roles) == 1 and isEnglish(message.content) is False and ('https://' in message.content or 'http://' in message.content) and message.channel.id == 683840764677193739:
             await author.ban(reason="Non-English characters in message with no author roles", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned user : {} ({}) for non-English characters in message\n Message: ```{}```".format(author, author.id, message.content))
+            await self.bot.modlog_channel.send("Banned user: {} ({}) for non-English characters in message\n Message: ```{}```".format(author, author.id, message.content))
 
         # crypto scammers
         banlist = [
@@ -220,16 +255,14 @@ class Mod(commands.Cog):
             if re.match(ban, message.content.lower()):
                 if len(author.roles) == 1:
                     await author.ban(reason="Banlisted quote", delete_message_days=1)
-                    await self.bot.modlog_channel.send("Banned user : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+                    await self.bot.modlog_channel.send("Banned user: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # csgo/other game scammers
         games = [
             "csgo",
             "cs:go",
-            "steam",
             "skins",
             "@everyone",
-            "free",
             "nitro"
         ]
         banned_sites = ['https://', 'http://', 'http://www.', 'https://www.']
@@ -237,17 +270,17 @@ class Mod(commands.Cog):
             if game in message.content.lower() and any(domain in message.content.lower() for domain in banned_sites):
                 if len(author.roles) == 1:
                     await author.ban(reason="CSGO Scammer most likely", delete_message_days=1)
-                    await self.bot.modlog_channel.send("Banned potential CSGO scammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+                    await self.bot.modlog_channel.send("Banned potential CSGO scammer: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # everyone + embed
         if "@everyone" in message.content.lower() and len(message.embeds) > 0:
             await author.ban(reason="Likely a promotion", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned potential promotion spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+            await self.bot.modlog_channel.send("Banned potential promotion spammer: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # russian sites
         if re.match(r".*http(.)?:\/\/[^\s]*\.ru.*", message.content.lower()):
             await author.ban(reason="Detected russian site. Preemptively banning incase it is a scam", delete_message_days=1)
-            await self.bot.modlog_channel.send("Banned potential russian site spammer : {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
+            await self.bot.modlog_channel.send("Banned potential russian site spammer: {} ({}) for the following message: ```{}```".format(author, author.id, message.content))
 
         # invite filtering
         msg_split = message.content.replace("\n", " ").split(" ")
@@ -258,9 +291,9 @@ class Mod(commands.Cog):
             if invite.guild.id not in self.whitelisted_guild_ids and message.channel.id not in (683403876208083026, 683403966607786058):  # ID 683403876208083026 = #list-your-sysbot-server, ID 683403966607786058 = #sysbot-servers
                 await message.author.add_roles(self.bot.mute_role, reason="Posted non-whitelisted invite")
                 await message.delete()
-                return await self.bot.mod_channel.send("Muted user posting a non-whitelisted invite : {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
+                return await self.bot.mod_channel.send("Muted user posting a non-whitelisted invite: {} ({}) for the following invite to the `{}` guild: ```{}```".format(author, author.id, invite.guild.name, invite.url))
 
-    @commands.command(name='promote', aliases=['addrole'])
+    @commands.hybrid_command(name='promote', aliases=['addrole'])
     @commands.guild_only()
     @commands.has_any_role("Moderators")
     async def promote(self, ctx, member: discord.Member):
@@ -274,64 +307,94 @@ class Mod(commands.Cog):
             embed.add_field(name="Action taken by", value=ctx.author.name)
             await member.add_roles(role)
             embed.title = "Added {} role".format(role.name)
-            await ctx.send("{} : {} role has been added to you!".format(member.mention, role.name))
+            await ctx.send("{}: {} role has been added to you!".format(member.mention, role.name))
             await self.bot.modlog_channel.send(embed=embed)
         else:
-            await ctx.send("{} : {} already has this role!".format(ctx.author.mention, member.name))
+            await ctx.send("{}: {} already has this role!".format(ctx.author.mention, member.name))
 
-    @commands.command(name="lock")
-    @commands.guild_only()
-    @commands.has_any_role("Moderators")
-    async def lock(self, ctx, role: discord.Role, phrase: str):
-        """Locks a channel to a specific role for access, unlock via the phrase and unlock commands"""
+    @app_commands.command(name="lock", description="Lock this channel to a role, unlockable via a secret phrase")
+    @app_commands.guild_only()
+    @app_commands.checks.has_any_role("Moderators")
+    async def lock(self, interaction: discord.Interaction, role: discord.Role):
+        await interaction.response.send_modal(LockModal(self, role))
+
+    async def apply_lock(self, interaction: discord.Interaction, role: discord.Role, phrase: str):
+        channel = interaction.channel
+        everyone = discord.utils.get(interaction.guild.roles, name="@everyone")
         # check if a lock already exists and delete
-        if str(ctx.channel.id) in self.locks:
-            r_id, _ = self.locks[str(ctx.channel.id)]
-            prev_role = discord.utils.get(ctx.guild.roles, id=r_id)
+        overwrite = channel.overwrites_for(everyone)
+        if str(channel.id) in self.locks:
+            r_id, _ = self.locks[str(channel.id)]
+            prev_role = discord.utils.get(interaction.guild.roles, id=r_id)
             if prev_role:
-                await ctx.channel.set_permissions(prev_role, overwrite=None)
+                await channel.set_permissions(prev_role, overwrite=None)
 
-        overwrite = discord.PermissionOverwrite()
         overwrite.send_messages = False
         overwrite.read_messages = None
-        await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
+        await channel.set_permissions(everyone, overwrite=overwrite)
         overwrite.send_messages = True
-        await ctx.channel.set_permissions(role, overwrite=overwrite)
-        self.locks[str(ctx.channel.id)] = [role.id, phrase]
+        await channel.set_permissions(role, overwrite=overwrite)
+        self.locks[str(channel.id)] = [role.id, phrase]
         with open("locks.json", "w") as f:
             json.dump(self.locks, f)
-        await ctx.message.delete()
-        await ctx.send("🔒 Locked channel with a secret phrase. Users can use the unlock command in <#429185857346338827> to access the channel.")
+        await interaction.response.send_message("🔒 Locked channel with a secret phrase. Users can use the unlock command in <#429185857346338827> to access the channel.")
 
-    @commands.command(name="unlock")
-    @commands.guild_only()
-    async def unlock(self, ctx, phrase: str):
-        """Unlocks a channel based on the phrase used"""
-        await ctx.message.delete()
-        valid_pass_bool = False
-        if ctx.channel.id != 429185857346338827:
-            await ctx.send("This command can only be used in <#429185857346338827>")
+    @lock.error
+    async def lock_app_error_handler(self, interaction: discord.Interaction, error):
+        await self.send_lock_error(interaction, error)
+
+    async def send_lock_error(self, interaction: discord.Interaction, error):
+        if isinstance(error, app_commands.CheckFailure):
+            msg = "You don't have permission to use this command."
+        else:
+            self.logger.exception(error, exc_info=error)
+            msg = f"An error occured while locking: {error}"
+        if interaction.response.is_done():
+            await interaction.followup.send(msg, ephemeral=True)
+        else:
+            await interaction.response.send_message(msg, ephemeral=True)
+
+    @app_commands.command(name="unlock", description="Unlock a channel using its secret phrase")
+    @app_commands.guild_only()
+    async def unlock(self, interaction: discord.Interaction):
+        if interaction.channel_id != 429185857346338827:
+            await interaction.response.send_message("This command can only be used in <#429185857346338827>", ephemeral=True)
             return
+        await interaction.response.send_modal(UnlockModal(self))
+
+    async def apply_unlock(self, interaction: discord.Interaction, phrase: str):
+        async def reply(content, ephemeral=False):
+            # several locks can share a phrase, but an interaction only gets one initial response
+            if interaction.response.is_done():
+                await interaction.followup.send(content, ephemeral=ephemeral)
+            else:
+                await interaction.response.send_message(content, ephemeral=ephemeral)
+
+        valid_pass_bool = False
         for i, v in self.locks.items():
             r, p = v
-            r = discord.utils.get(ctx.guild.roles, id=r)
-            if phrase == p and r not in ctx.author.roles:
+            r = discord.utils.get(interaction.guild.roles, id=r)
+            if phrase == p and r not in interaction.user.roles:
                 valid_pass_bool = True
-                await ctx.author.add_roles(r)
-                await ctx.send(f"✅ {ctx.author.mention} Unlocked channel <#{i}>.")
+                await interaction.user.add_roles(r)
+                await reply(f"✅ {interaction.user.mention} Unlocked channel <#{i}>.")
             elif phrase == p:
                 valid_pass_bool = True
-                await ctx.send(f"⚠️ You already have access to <#{i}>.")
+                await reply(f"⚠️ You already have access to <#{i}>.", ephemeral=True)
         if not valid_pass_bool:
-            await ctx.send(f"❌ {ctx.author.mention} that is not a valid unlock phrase.")
+            await reply(f"❌ {interaction.user.mention} that is not a valid unlock phrase.", ephemeral=False)
 
-    @commands.command(name="dellock")
+    @unlock.error
+    async def unlock_app_error_handler(self, interaction: discord.Interaction, error):
+        await self.send_lock_error(interaction, error)
+
+    @commands.hybrid_command(name="dellock")
     @commands.guild_only()
     @commands.has_any_role("Moderators")
     async def dellock(self, ctx):
         if str(ctx.channel.id) not in self.locks:
             return await ctx.send("This channel is already unrestricted.")
-        overwrite = discord.PermissionOverwrite()
+        overwrite = ctx.channel.overwrites_for(discord.utils.get(ctx.guild.roles, name="@everyone"))
         overwrite.send_messages = None
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, name="@everyone"), overwrite=overwrite)
         await ctx.channel.set_permissions(discord.utils.get(ctx.guild.roles, id=self.locks[str(ctx.channel.id)][0]), overwrite=None)
@@ -340,7 +403,7 @@ class Mod(commands.Cog):
             json.dump(self.locks, f)
         await ctx.send("This channel is no longer role locked.")
 
-    @commands.command(name="listwarns")
+    @commands.hybrid_command(name="listwarns")
     @commands.guild_only()
     async def listwarns(self, ctx, user: discord.User = None):
         """Lists warnings for a user"""
@@ -350,7 +413,7 @@ class Mod(commands.Cog):
             raise commands.errors.CheckFailure()
             return
         embed = discord.Embed(color=discord.Color.dark_red())
-        embed.set_author(name="Warns for {}".format(user), icon_url=user.avatar_url)
+        embed.set_author(name="Warns for {}".format(user), icon_url=user.display_avatar.url)
         with open("warnings.json", "r") as f:
             warns = json.load(f)
         try:
@@ -365,7 +428,7 @@ class Mod(commands.Cog):
             embed.color = discord.Color.green()
         await ctx.send(embed=embed)
 
-    @commands.command(name="warn")
+    @commands.hybrid_command(name="warn")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def warn(self, ctx, member: discord.Member, *, reason=""):
@@ -381,7 +444,7 @@ class Mod(commands.Cog):
             warn_count = len(rsts[str(member.id)]["warns"])
         msg = "You were warned on PKHeX Development server."
         if reason != "":
-            msg += " The given reason was : " + reason
+            msg += " The given reason was: " + reason
         msg += "\n\nPlease read the rules of the server. This is warn #{}".format(warn_count)
         if warn_count >= 5:
             msg += "\n\nYou were automatically banned due to five or more warnings."
@@ -403,22 +466,23 @@ class Mod(commands.Cog):
                 await member.kick(reason="Three or Four Warnings")
             except Exception:
                 await ctx.send("No permission to kick the warned member")
-        elif warn_count <= 2:
-            msg += " __The next warn will automatically kick.__"
+        else:
+            if warn_count == 2:
+                msg += " __The next warn will automatically kick.__"
             try:
                 await member.send(msg)
             except discord.errors.Forbidden:
                 pass  # dont fail incase user has blocked the bot
         msg = "⚠️ **Warned**: {} warned {} (warn #{}) | {}".format(issuer.name, member.mention, warn_count, str(member))
         if reason != "":
-            msg += " The given reason is : " + reason
+            msg += " The given reason is: " + reason
         await ctx.send(msg)
         ctr_msg = self.countermemes(reason)
         if ctr_msg:
             await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(msg)
 
-    @commands.command(name="delwarn")
+    @commands.hybrid_command(name="delwarn")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def delwarn(self, ctx, member: discord.Member, idx: int):
@@ -441,7 +505,7 @@ class Mod(commands.Cog):
             await ctx.send(msg)
             await self.bot.modlog_channel.send(msg, embed=returnvalue)
 
-    @commands.command(name="clearwarns")
+    @commands.hybrid_command(name="clearwarns")
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def clearwarns(self, ctx, member: discord.Member):
@@ -463,7 +527,7 @@ class Mod(commands.Cog):
         await ctx.send(msg)
         await self.bot.modlog_channel.send(msg)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     async def kick(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
@@ -497,7 +561,7 @@ class Mod(commands.Cog):
                     await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     async def kickwarn(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
@@ -544,7 +608,7 @@ class Mod(commands.Cog):
                     await ctx.send(ctr_msg)
                 await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     async def ban(self, ctx, user: discord.User, *, reason: str = "No reason given."):
@@ -563,22 +627,19 @@ class Mod(commands.Cog):
         return_msg = "Banned user: {}".format(user.mention)
         return_msg += " for reason `{}`".format(reason)
         embed.add_field(name="Reason", value=reason)
-        return_msg += "."
         await ctx.send(return_msg)
         ctr_msg = self.countermemes(reason)
         if ctr_msg:
             await ctx.send(ctr_msg)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    async def hackban(self, ctx, user_id: int, *, reason: str = "No reason given."):
-        user = await self.bot.fetch_user(user_id)
-        if user:
-            await self.ban(ctx, user, reason=reason)
+    async def hackban(self, ctx, user: discord.User, *, reason: str = "No reason given."):
+        await self.ban(ctx, user, reason=reason)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def mute(self, ctx, member: discord.Member, *, reason: str = "No reason given."):
@@ -596,7 +657,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command(aliases=['tmute', 'timemute'])
+    @commands.hybrid_command(aliases=['tmute', 'timemute'])
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def timedmute(self, ctx, member: discord.Member, duration, *, reason: str = "No reason given."):
@@ -634,7 +695,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def unmute(self, ctx, member: discord.Member):
@@ -648,7 +709,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Action taken by", value=ctx.author.name)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command(name="wlguild")
+    @commands.hybrid_command(name="wlguild")
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def whitelist_guild(self, ctx, guild_invite: str, reason: str = "No reason was given."):
@@ -670,7 +731,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Reason", value=reason)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command(name="dewlguild")
+    @commands.hybrid_command(name="dewlguild")
     @checks.check_permissions_or_owner(manage_roles=True)
     @commands.bot_has_permissions(manage_roles=True)
     async def dewhitelist_guild(self, ctx, guild_invite: str):
@@ -691,7 +752,7 @@ class Mod(commands.Cog):
         embed.add_field(name="Action taken by", value=ctx.author.name)
         await self.bot.modlog_channel.send(embed=embed)
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.cooldown(rate=3, per=15.0, type=BucketType.user)
     async def report(self, ctx):
         await ctx.send("This incident has been reported to the proper authorities. Thank you for your time.")
@@ -701,7 +762,7 @@ class Mod(commands.Cog):
         "pksysbot": "You can find:\n- Sysbot.NET's wiki [here](https://github.com/kwsch/SysBot.NET/wiki).\n- General troubleshooting steps [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting).\n- Troubleshooting steps for sys-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Troubleshooting-Connection-Errors).\n- Troubleshooting steps for usb-botbase [here](https://github.com/kwsch/SysBot.NET/wiki/Configuring-a-new-USB-Connection#troubleshooting)."
     }
 
-    @commands.command()
+    @commands.hybrid_command()
     async def wiki(self, ctx, target: str = None):
         """Sends a link to the target wiki. Automatic choice in help channels. Targets: alm | livehex, pksysbot"""
         if not target or target not in ("alm", "livehex", "pksysbot"):
@@ -726,6 +787,27 @@ class Mod(commands.Cog):
                     inline=False)
         embed.set_footer(text="Please read through every troubleshooting step on the repo before asking a question.")
         await ctx.send(embed=embed)
+        
+    @commands.hybrid_command()
+    async def nudge(self, ctx, target: str):
+        """Sends a nudge to the user"""
+        if target.lower() not in self.nudges:
+            return await ctx.send("This nudge does not exist")
+        embed = discord.Embed(title="Reminder")
+        embed.description = self.nudges[target.lower()]
+        await ctx.send(embed=embed)
+        
+    @commands.hybrid_command()
+    @commands.has_any_role("Moderators")
+    async def addnudge(self, ctx, target: str, *, nudge: str = None):
+        """Creates a nudge"""
+        if not nudge and target.lower() in self.nudges:
+            del self.nudges[target.lower()]
+            return await ctx.send("Successfully deleted nudge")
+        self.nudges[target.lower()] = nudge
+        with open("nudges.json", "w") as f:
+            json.dump(self.nudges, f)
+        await ctx.send("Successfully created/updated nudge")
 
     @commands.command()
     @commands.has_any_role("Moderators")
@@ -734,7 +816,7 @@ class Mod(commands.Cog):
         out = subprocess.Popen('git pull', stdout=subprocess.PIPE, shell=True)
         await ctx.send(out.communicate()[0].decode("utf-8"))
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def newcounter(self, ctx, name):
@@ -746,7 +828,7 @@ class Mod(commands.Cog):
             json.dump(self.counters, f)
         await ctx.send(f"Created/Reset counter `{name}`.")
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.guild_only()
     @commands.has_any_role("Moderators", "aww")
     async def listcounters(self, ctx):
@@ -782,12 +864,10 @@ class Mod(commands.Cog):
                 await ctx.send("An error occurred while processing the `{}` command.".format(ctx.command.name))
             self.logger.exception(error, exc_info=error)
 
-    @lock.error
-    @unlock.error
     @dellock.error
     async def lock_error_handler(self, ctx, error):
         await ctx.send(f"An error occured while locking: {error}")
 
 
-def setup(bot):
-    bot.add_cog(Mod(bot))
+async def setup(bot):
+    await bot.add_cog(Mod(bot))
