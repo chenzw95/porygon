@@ -136,5 +136,7 @@ if __name__ == "__main__":
                 asyncio.run(bot.start(config['token']))
         else:
             asyncio.run(bot.start(config['token']))
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Bot crashed")
     finally:
         sys.exit(-1)
