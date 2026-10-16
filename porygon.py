@@ -36,8 +36,6 @@ if __name__ == "__main__":
         import uvloop
     except ImportError:
         pass
-    else:
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     try:
         with open("config.json") as c:
             config = json.load(c)
@@ -129,6 +127,14 @@ if __name__ == "__main__":
         bot.is_setup.set()
 
     try:
-        bot.run(config['token'])
+        if "uvloop" in sys.modules:
+            if sys.version_info >= (3, 11):
+                with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
+                    runner.run(bot.start(config['token']))
+            else:
+                uvloop.install()
+                asyncio.run(bot.start(config['token']))
+        else:
+            asyncio.run(bot.start(config['token']))
     finally:
         sys.exit(-1)
